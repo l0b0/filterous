@@ -1,42 +1,41 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Filterous - Delicious bookmark backup search
+"""Filterous - Delicious Command Line Filter
 
 Default syntax:
 
-./filterous.py -f username.xml [[--not] [--tag='string'] [--description='string']
-[--notes='string'] [--url='string'] ...]
+./filterous.py < all.xml
 
 Options:
--f,--file                   Path to Delicious export file
-<https://api.del.icio.us/v1/posts/all?>
---not                       Negate the next search operator
--t,--tag                    Tag search string (@tag)
--d,--description            Description search string (@description)
--e,-n,--extended,--notes    Notes search string (@extended)
--h,-u,--href,--url          URL search string (@href)
--v,--verbose                Verbose output
+--tag       Tag search string (@tag)
+--ntag      Negated tag search string (@tag)
+--desc      Description search string (@description)
+--ndesc     Negated description search string (@description)
+--notes     Notes search string (@extended)
+--nnotes    Negated notes search string (@extended)
+--url       URL search string (@href)
+--nurl      Negated URL search string (@href)
 
 Description:
 Will search the tags of the XML file downloaded from
-<https://api.del.icio.us/v1/posts/all?>. To avoid the slow load of that page in
-a web browser, you can use the following command:
-curl -ku : https://api.del.icio.us/v1/posts/all
+<https://api.del.icio.us/v1/posts/all>. To avoid the slow load of that page in
+a web browser, you can use one of the following commands:
+
+curl -ku username:password https://api.del.icio.us/v1/posts/all
+
+wget --no-check-certificate --user=username --password=password -O all.xml \
+https://api.del.icio.us/v1/posts/all
 
 Examples:
 
-./filterous.py -f username.xml --tag='video' --tag='tosee' --not --tag='seen'
-Returns links to unseen videos
+./filterous.py --tag=video --tag=tosee --ntag=seen < all.xml
+    Returns links to unseen videos.
 
-./filterous.py -f username.xml --not --href='^https'
-Returns non-secured links
+./filterous.py --nurl='^https' < all.xml
+    Returns non-HTTPS links.
 
-./filterous.py -f username.xml --not --tag='^for:' --tag='★★★★★'
-Returns great links that you have not shared with your contacts
-
-./filterous.py -f username.xml --verbose
-Returns a list of all your bookmarks, with all the user provided information
-included
+./filterous.py --ntag='^for:' --tag='★★★★★' < all.xml
+    Returns great links that you have not shared with your contacts.
 """
 
 __author__ = 'Victor Engmark'
@@ -45,100 +44,36 @@ __url__ = 'http://filterous.sourceforge.net/'
 __copyright__ = 'Copyright (C) 2010 Victor Engmark'
 __license__ = 'GPLv3'
 
-import getopt
-import sys
-import libxml2
+from datetime import datetime
+import xml.etree.ElementTree as ET
+import re
 
-class DeliciousSearch():
-    """
-    Has a list of bookmarks with their metadata and display functions
-    """
-    def __init__(self, filename, tags = [], verbose = False):
-        self.filename = filename
-        self.verbose = verbose
-        self.tags = tags
-
-        self.result = self.search()
+class Bookmarks():
+    """Has a list of bookmarks with their metadata and display functions."""
+    def __init__(self, text):
+        self.doc = ET.fromstring(text)
 
     def __str__(self):
-        return '\n'.join(self.result)
+        return ET.tostring(self.doc)
 
-    def search(self):
+    def search(self, tags):
         """
-        Find matching bookmarks
-        @param filename: Delicious bookmark file path
-        @param tags: Tags to match
+        Find matching bookmarks.
+
+        @param tags: List of tag regexes to match
         @return: List of URLs
         """
-        doc = libxml2.parseFile(self.filename)
-        result = []
 
-        tag_searches = ["contains(@tag,'%s')" % tag for tag in self.tags]
-        tag_search = ' and '.join(tag_searches)
-        if len(tag_search) != 0:
-            tag_search = '[' + tag_search + ']'
+        tag_patterns = [re.compile(tag) for tag in tags]
 
-        try:
-            for bookmark_element in doc.xpathEval('/posts/post' + tag_search):
-                result.append(bookmark_element.xpathEval('@href')[0].content)
-        except SyntaxError, error:
-            sys.stderr.write(
-                'Could not process search %s: %s' % (
-                    tag_search,
-                    error))
-        finally:
-            doc.freeDoc()
+        for node in self.doc.getchildren():
+            for tag_pattern in tag_patterns:
+                match = False
+                for node_tag in node.attrib['tag'].split(' '):
+                    if tag_pattern.match(node_tag):
+                        match = True
+                if not match:
+                    self.doc.remove(node)
 
-        return result
-
-class Usage(Exception):
-    """Raise in case of invalid parameters"""
-    def __init__(self, msg):
-        self.msg = msg
-
-def main(argv = None):
-    """Argument handling"""
-
-    if argv is None:
-        argv = sys.argv
-
-    # Defaults
-    verbose = False
-    filename = ''
-    tags = []
-
-    try:
-        try:
-            opts, args = getopt.getopt(
-                argv[1:],
-                'vf:t:',
-                [
-                    'verbose',
-                    'file=',
-                    'tag='])
-        except getopt.GetoptError, err:
-            raise Usage(err.msg)
-
-        for option, value in opts:
-            if option in ('-v', '--verbose'):
-                verbose = True
-            elif option in ('-f', '--file'):
-                filename = value
-            elif option in ('-t', '--tag'):
-                tags.append(value)
-            else:
-                raise Usage('Unhandled option %s' % option)
-
-        if args or not filename:
-            raise Usage(__doc__)
-
-        result = DeliciousSearch(filename, tags, verbose)
-
-        print(result)
-
-    except Usage, err:
-        sys.stderr.write(err.msg + '\n')
-        return 2
-
-if __name__ == '__main__':
-    sys.exit(main())
+        # Update @update
+        #xml_root.setProp('update', datetime.utcnow().isoformat()[:-7] + 'Z')
