@@ -7,14 +7,14 @@ Default syntax:
 ./filterous.py < all.xml
 
 Options:
---tag       Tag search string (@tag)
---ntag      Negated tag search string (@tag)
---desc      Description search string (@description)
---ndesc     Negated description search string (@description)
---notes     Notes search string (@extended)
---nnotes    Negated notes search string (@extended)
---url       URL search string (@href)
---nurl      Negated URL search string (@href)
+--tag      Tag search string (@tag)
+--ntag     Negated tag search string (@tag)
+--desc     Description search string (@description)
+--ndesc    Negated description search string (@description)
+--note     Note search string (@extended)
+--nnote    Negated note search string (@extended)
+--url      URL search string (@href)
+--nurl     Negated URL search string (@href)
 
 Description:
 Will search the tags of the XML file downloaded from
@@ -31,10 +31,10 @@ Examples:
 ./filterous.py --tag=video --tag=tosee --ntag=seen < all.xml
     Returns links to unseen videos.
 
-./filterous.py --nurl='^https' < all.xml
+./filterous.py --nurl=^https < all.xml
     Returns non-HTTPS links.
 
-./filterous.py --ntag='^for:' --tag='★★★★★' < all.xml
+./filterous.py --ntag=^for: --tag=★★★★★ < all.xml
     Returns great links that you have not shared with your contacts.
 """
 
@@ -44,36 +44,88 @@ __url__ = 'http://filterous.sourceforge.net/'
 __copyright__ = 'Copyright (C) 2010 Victor Engmark'
 __license__ = 'GPLv3'
 
-from datetime import datetime
 import xml.etree.ElementTree as ET
-import re
 
-class Bookmarks():
+TAG_SEPARATOR = u' '
+
+class DeliciousBookmarks(ET.ElementTree):
     """Has a list of bookmarks with their metadata and display functions."""
-    def __init__(self, text):
-        self.doc = ET.fromstring(text)
 
-    def __str__(self):
-        return ET.tostring(self.doc)
+    def search_tags_and(self, tags):
+        """
+        Check that all tags are present. Remove the bookmark if not.
 
-    def search(self, tags):
+        @param tags: List of tags
+        """
+        root = self.getroot()
+        bookmarks = root.getchildren()
+        garbage = []
+        for tag in tags:
+            for bookmark in bookmarks:
+                if tag not in bookmark.attrib['tag'].split(TAG_SEPARATOR):
+                    garbage.append(bookmark)
+
+        for bookmark in garbage:
+            root.remove(bookmark)
+
+    def search_tags_not(self, tags):
+        """
+        Check that no tags are present. Remove the bookmark if they are.
+
+        @param tags: List of tags
+        """
+        root = self.getroot()
+        bookmarks = root.getchildren()
+        garbage = []
+        for tag in tags:
+            for bookmark in bookmarks:
+                if tag in bookmark.attrib['tag'].split(TAG_SEPARATOR):
+                    garbage.append(bookmark)
+
+        for bookmark in garbage:
+            root.remove(bookmark)
+
+    def search_url(self, url):
+        """
+        URL substring match.
+
+        @param url: Substring of an URL
+        """
+        root = self.getroot()
+        bookmarks = root.getchildren()
+        garbage = []
+        for bookmark in bookmarks:
+            if bookmark.attrib['href'].find(url) == -1:
+                garbage.append(bookmark)
+
+        for bookmark in garbage:
+            root.remove(bookmark)
+
+    def search(
+        self,
+        tags = None,
+        ntags = None,
+        desc = None,
+        ndesc = None,
+        note = None,
+        nnote = None,
+        url = None,
+        nurl = None,
+        etags = None,
+        edesc = None,
+        enote = None,
+        eurl = None):
         """
         Find matching bookmarks.
 
-        @param tags: List of tag regexes to match
-        @return: List of URLs
+        @param search: List of tag regexes to match
         """
 
-        tag_patterns = [re.compile(tag) for tag in tags]
+        if tags is not None:
+            self.search_tags_and(tags)
 
-        for node in self.doc.getchildren():
-            for tag_pattern in tag_patterns:
-                match = False
-                for node_tag in node.attrib['tag'].split(' '):
-                    if tag_pattern.match(node_tag):
-                        match = True
-                if not match:
-                    self.doc.remove(node)
+        if ntags is not None:
+            self.search_tags_not(ntags)
 
-        # Update @update
-        #xml_root.setProp('update', datetime.utcnow().isoformat()[:-7] + 'Z')
+        if url is not None:
+            self.search_url(url)
