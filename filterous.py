@@ -4,7 +4,7 @@
 
 Default syntax:
 
-./filterous.py < all.xml
+./filterous.py [options] < all.xml
 
 Options:
 --tag      Tag search string (@tag)
@@ -15,6 +15,9 @@ Options:
 --nnote    Negated note search string (@extended)
 --url      URL search string (@href)
 --nurl     Negated URL search string (@href)
+-t         Show tags
+-d         Show descriptions
+-n         Show notes
 
 Description:
 Will search the tags of the XML file downloaded from
@@ -44,12 +47,41 @@ __url__ = 'http://filterous.sourceforge.net/'
 __copyright__ = 'Copyright (C) 2010 Victor Engmark'
 __license__ = 'GPLv3'
 
+import getopt
+import sys
 import xml.etree.ElementTree as ET
 
 TAG_SEPARATOR = u' '
 
 class DeliciousBookmarks(ET.ElementTree):
     """Has a list of bookmarks with their metadata and display functions."""
+
+    def pretty_print(
+        self,
+        show_tags = False,
+        show_descriptions = False,
+        show_notes = False):
+        """Print shell output, optionally with tags, descriptions and notes."""
+        lines = []
+
+        for post in self.getroot().getchildren():
+            lines.append(post.get('href'))
+
+            if show_tags:
+                lines.append(post.get('tag'))
+
+            if show_descriptions:
+                lines.append(post.get('description'))
+
+            if show_notes:
+                lines.append(post.get('extended'))
+
+            if show_tags or show_descriptions or show_notes:
+                # Space the posts nicely
+                lines.append('')
+
+        return '\n'.join(lines)
+
 
     def search_tags_and(self, tags):
         """
@@ -62,11 +94,13 @@ class DeliciousBookmarks(ET.ElementTree):
         garbage = []
         for tag in tags:
             for bookmark in bookmarks:
-                if tag not in bookmark.attrib['tag'].split(TAG_SEPARATOR):
+                if tag not in bookmark.attrib['tag'].split(TAG_SEPARATOR) and \
+                       bookmark not in garbage:
                     garbage.append(bookmark)
 
         for bookmark in garbage:
             root.remove(bookmark)
+
 
     def search_tags_not(self, tags):
         """
@@ -79,13 +113,15 @@ class DeliciousBookmarks(ET.ElementTree):
         garbage = []
         for tag in tags:
             for bookmark in bookmarks:
-                if tag in bookmark.attrib['tag'].split(TAG_SEPARATOR):
+                if tag in bookmark.attrib['tag'].split(TAG_SEPARATOR) and \
+                       bookmark not in garbage:
                     garbage.append(bookmark)
 
         for bookmark in garbage:
             root.remove(bookmark)
 
-    def search_url(self, url):
+
+    def search_url(self, urls):
         """
         URL substring match.
 
@@ -94,38 +130,102 @@ class DeliciousBookmarks(ET.ElementTree):
         root = self.getroot()
         bookmarks = root.getchildren()
         garbage = []
-        for bookmark in bookmarks:
-            if bookmark.attrib['href'].find(url) == -1:
-                garbage.append(bookmark)
+        for url in urls:
+            for bookmark in bookmarks:
+                if bookmark.attrib['href'].find(url) == -1 and \
+                       bookmark not in garbage:
+                    garbage.append(bookmark)
 
         for bookmark in garbage:
             root.remove(bookmark)
 
+
     def search(
         self,
-        tags = None,
-        ntags = None,
-        desc = None,
-        ndesc = None,
-        note = None,
-        nnote = None,
-        url = None,
-        nurl = None,
-        etags = None,
-        edesc = None,
-        enote = None,
-        eurl = None):
+        search):
         """
-        Find matching bookmarks.
+        Remove posts that don't match the search terms.
 
-        @param search: List of tag regexes to match
+        @param search: Dictionary of search terms.
         """
 
-        if tags is not None:
-            self.search_tags_and(tags)
+        if 'tag' in search:
+            self.search_tags_and(search['tag'])
+        if 'ntag' in search:
+            self.search_tags_not(search['ntag'])
+        if 'url' in search:
+            self.search_url(search['url'])
 
-        if ntags is not None:
-            self.search_tags_not(ntags)
 
-        if url is not None:
-            self.search_url(url)
+class Usage(Exception):
+    """Raise in case of invalid parameters."""
+    # pylint: disable-msg=W0231
+    def __init__(self, msg):
+        self.msg = msg
+
+
+def main(argv = None):
+    """Argument handling."""
+
+    if argv is None:
+        argv = sys.argv
+
+    # Defaults
+    show_tags = False
+    show_descriptions = False
+    show_notes = False
+
+    search_options = [
+        'tag',
+        'ntag',
+        'desc',
+        'ndesc',
+        'note',
+        'nnote',
+        'url',
+        'nurl',
+        'etag',
+        'edesc',
+        'enote',
+        'eurl']
+
+    # Initialize search function parameters
+    search_params = {}
+    for search_option in search_options:
+        search_params[search_option] = []
+
+    try:
+        try:
+            opts, args = getopt.getopt(
+                argv[1:],
+                'tdn',
+                [search_option + '=' for search_option in search_options])
+        except getopt.GetoptError, err:
+            raise Usage(err.msg)
+
+        if len(opts) != 0:
+            for option, value in opts:
+                if option in [
+                    '--' + search_option for search_option in search_options]:
+                    search_params[option[2:]].append(value)
+                elif option == '-t':
+                    show_tags = True
+                elif option == '-d':
+                    show_descriptions = True
+                elif option == '-n':
+                    show_notes = True
+                else:
+                    raise Usage('Unhandled option %s' % option)
+
+    except Usage, err:
+        sys.stderr.write(err.msg + '\n')
+        return 2
+
+    bookmarks = DeliciousBookmarks(ET.fromstring(sys.stdin.read()))
+    bookmarks.search(search_params)
+
+    print(bookmarks.pretty_print(show_tags, show_descriptions, show_notes))
+
+
+if __name__ == '__main__':
+    sys.exit(main())

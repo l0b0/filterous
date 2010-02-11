@@ -14,7 +14,6 @@ __url__ = 'http://filterous.sourceforge.net/'
 __copyright__ = 'Copyright (C) 2010 Victor Engmark'
 __license__ = 'GPLv3'
 
-from copy import deepcopy
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -64,7 +63,7 @@ class TestAll(unittest.TestCase):
 
     def test_empty_tag(self):
         """Empty tag; should have no posts left."""
-        self.bookmarks.search(tags = [u''])
+        self.bookmarks.search({'tag': [u'']})
         self.assertEqual(
             _posts(self.bookmarks),
             [])
@@ -72,7 +71,7 @@ class TestAll(unittest.TestCase):
 
     def test_separator_tag(self):
         """Search for tag separator; should have no posts left."""
-        self.bookmarks.search(tags = [filterous.TAG_SEPARATOR])
+        self.bookmarks.search({'tag': [filterous.TAG_SEPARATOR]})
         self.assertEqual(
             _posts(self.bookmarks),
             [])
@@ -80,7 +79,7 @@ class TestAll(unittest.TestCase):
 
     def test_simple_tag(self):
         """Simple tag used in one bookmark; should have 1 post left."""
-        self.bookmarks.search(tags = [u'tosee'])
+        self.bookmarks.search({'tag': [u'tosee']})
         self.assertEqual(
             len(_posts(self.bookmarks)),
             1)
@@ -88,7 +87,7 @@ class TestAll(unittest.TestCase):
 
     def test_unused_tag(self):
         """Unused tag; should have no posts left."""
-        self.bookmarks.search(tags = [u'klaxbar'])
+        self.bookmarks.search({'tag': [u'klaxbar']})
         self.assertEqual(
             _posts(self.bookmarks),
             [])
@@ -96,7 +95,7 @@ class TestAll(unittest.TestCase):
 
     def test_unicode_tag(self):
         """Unicode tag used in one bookmark; should have 1 post left."""
-        self.bookmarks.search(tags = [u'★★★★★'])
+        self.bookmarks.search({'tag': [u'★★★★★']})
         self.assertEqual(
             len(_posts(self.bookmarks)),
             1)
@@ -105,14 +104,14 @@ class TestAll(unittest.TestCase):
     def test_substring_tag(self):
         """Unused tag which is a substring of a used tag;
         should have no posts left."""
-        self.bookmarks.search(tags = [u'★'])
+        self.bookmarks.search({'tag': [u'★']})
         self.assertEqual(
             _posts(self.bookmarks),
             [])
 
     def test_empty_tag_not(self):
         """Empty tag; should not change."""
-        self.bookmarks.search(ntags = [u''])
+        self.bookmarks.search({'ntag': [u'']})
         self.assertEqual(
             ET.tostring(self.bookmarks.getroot(), 'utf-8'),
             XML)
@@ -120,7 +119,7 @@ class TestAll(unittest.TestCase):
 
     def test_separator_tag_not(self):
         """Search for tag separator; should not change."""
-        self.bookmarks.search(ntags = [filterous.TAG_SEPARATOR])
+        self.bookmarks.search({'ntag': [filterous.TAG_SEPARATOR]})
         self.assertEqual(
             ET.tostring(self.bookmarks.getroot(), 'utf-8'),
             XML)
@@ -128,7 +127,7 @@ class TestAll(unittest.TestCase):
 
     def test_simple_tag_not(self):
         """Simple tag used in one bookmark; should have N-1 posts left."""
-        self.bookmarks.search(ntags = [u'tosee'])
+        self.bookmarks.search({'ntag': [u'tosee']})
         self.assertEqual(
             len(ET.tostring(self.bookmarks.getroot(), 'utf-8').splitlines()),
             len(XML.splitlines()) - 1)
@@ -136,7 +135,7 @@ class TestAll(unittest.TestCase):
 
     def test_unused_tag_not(self):
         """Unused tag; should not change."""
-        self.bookmarks.search(ntags = [u'klaxbar'])
+        self.bookmarks.search({'ntag': [u'klaxbar']})
         self.assertEqual(
             ET.tostring(self.bookmarks.getroot(), 'utf-8'),
             XML)
@@ -144,7 +143,7 @@ class TestAll(unittest.TestCase):
 
     def test_unicode_tag_not(self):
         """Unicode tag used in one bookmark; should have N-1 posts left."""
-        self.bookmarks.search(ntags = [u'★★★★★'])
+        self.bookmarks.search({'ntag': [u'★★★★★']})
         self.assertEqual(
             len(ET.tostring(self.bookmarks.getroot(), 'utf-8').splitlines()),
             len(XML.splitlines()) - 1)
@@ -152,14 +151,14 @@ class TestAll(unittest.TestCase):
 
     def test_substring_tag_not(self):
         """Unused tag which is a substring of a used tag; should not change."""
-        self.bookmarks.search(ntags = [u'★'])
+        self.bookmarks.search({'ntag': [u'★']})
         self.assertEqual(
             ET.tostring(self.bookmarks.getroot(), 'utf-8'),
             XML)
 
     def test_simple_url(self):
         """Domain name match"""
-        self.bookmarks.search(url = u'example.org')
+        self.bookmarks.search({'url': [u'example.org']})
         self.assertEqual(
             len(_posts(self.bookmarks)),
             1)
