@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Filterous - Delicious Command Line Filter
+"""Filterous - Delicious Command Line Filter <http://filterous.sourceforge.net/>
 
 Default syntax:
 
@@ -43,7 +43,6 @@ Examples:
 
 __author__ = 'Victor Engmark'
 __email__ = 'victor.engmark@gmail.com'
-__url__ = 'http://filterous.sourceforge.net/'
 __copyright__ = 'Copyright (C) 2010 Victor Engmark'
 __license__ = 'GPLv3'
 
@@ -118,7 +117,7 @@ ERRM_SUBMIT_BUG = u'Please submit a bug report at \
 including the output of this script.'
 """Ask users for feedback."""
 
-def get_format_xpath(attributes):
+def _get_format_xpath(attributes):
     """
     Pretty printing XPath.
 
@@ -131,10 +130,12 @@ def get_format_xpath(attributes):
     paths = []
     for attribute in attributes:
         assert(attribute in PARAM_ATTRIBUTES.values())
-        paths.append(
-            "concat('%(x_title)s: ', @%(x_attribute)s, '\n')" % {
-                'x_title': ATTRIBUTES_READABLE[attribute],
-                'x_attribute': attribute})
+        path = "concat("
+        if len(attributes) != 1:
+            # Show line prefix only when outputting several attributes
+            path += "'%s: ', " % ATTRIBUTES_READABLE[attribute]
+        path += "@%s, '\n')" % attribute
+        paths.append(path)
 
     if len(attributes) == 1:
         result = paths[0]
@@ -146,7 +147,7 @@ def get_format_xpath(attributes):
     return etree.XPath(result)
 
 
-def get_search_xpath(terms):
+def _get_search_xpath(terms):
     """
     XPath expression to search on each post.
 
@@ -190,7 +191,7 @@ concat(' ', '%(x_value)s', ' '))" % {
 
         result += ''.join(xpaths)
 
-    return '/posts/post' + result
+    return etree.XPath('/posts/post' + result)
 
 
 def search(file_pointer, terms, show_attributes, out):
@@ -202,13 +203,13 @@ def search(file_pointer, terms, show_attributes, out):
     @param show_attributes: Which attributes to output
     @param out: Output stream
     """
-    search_xpath = get_search_xpath(terms)
-    format_xpath = get_format_xpath(show_attributes)
+    search_xpath = _get_search_xpath(terms)
+    format_xpath = _get_format_xpath(show_attributes)
 
     context = etree.iterparse(file_pointer, tag='posts')
 
-    for event, element in context:
-        matches = element.xpath(search_xpath)
+    for event_elem in context:
+        matches = search_xpath(event_elem[1])
         if matches is None:
             print('No matches found.')
             return
@@ -257,12 +258,12 @@ def main(argv = None):
         for option, value in opts:
             if option in search_options:
                 search_params[option[2:]].append(value)
-            elif option == '-t':
-                show_attributes.append('tag')
             elif option == '-d':
                 show_attributes.append('description')
             elif option == '-n':
                 show_attributes.append('extended')
+            elif option == '-t':
+                show_attributes.append('tag')
             else:
                 raise UsageError(
                     "Unhandled option '%(x_option)s'. %(x_user_action)s" % {
