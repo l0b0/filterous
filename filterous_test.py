@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Filterous test suite
+"""Filterous test suite <http://filterous.sourceforge.net/>
 
 Default syntax:
 
@@ -10,35 +10,10 @@ Default syntax:
 
 __author__ = 'Victor Engmark'
 __email__ = 'victor.engmark@gmail.com'
-__url__ = 'http://filterous.sourceforge.net/'
 __copyright__ = 'Copyright (C) 2010 Victor Engmark'
 __license__ = 'GPLv3'
 
-try:
-    from lxml import etree
-    print("running with lxml.etree")
-except ImportError:
-    try:
-        # Python 2.5
-        import xml.etree.cElementTree as etree
-        print("running with cElementTree on Python 2.5+")
-    except ImportError:
-        try:
-            # Python 2.5
-            import xml.etree.ElementTree as etree
-            print("running with ElementTree on Python 2.5+")
-        except ImportError:
-            try:
-                # normal cElementTree install
-                import cElementTree as etree
-                print("running with cElementTree")
-            except ImportError:
-                try:
-                    # normal ElementTree install
-                    import elementtree.ElementTree as etree
-                    print("running with ElementTree")
-                except ImportError:
-                    print("Failed to import ElementTree from any known place")
+from cStringIO import StringIO
 import unittest
 
 import filterous
@@ -70,155 +45,185 @@ tag="Python programming language opensource software development reference" \
 time="2006-12-01T15:00:52Z" \
 />\n</posts>'''
 
-def _posts(bookmarks):
-    """Element objects for each post"""
-    return bookmarks.getroot().getchildren()
-
-class TestRegex(unittest.TestCase):
-    """Framework for testing regular expression generators."""
-
-    def test_format_simple(self):
-        """Simple formatting XPath"""
-        xp = filterous.get_format_xpath(['tag'])
-        expected = '@tag'
-        self.assertNotEqual(xp, None)
-        self.assertEqual(xp.path, expected)
-
-
-    def test_search_simple(self):
-        """Simple search XPath"""
-        xp = filterous.get_search_xpath({'tag': ['foobar']})
-        expected = "/posts/post[contains(\
-concat(' ', @tag, ' '), \
-concat(' ', 'foobar', ' '))]"
-        self.assertNotEqual(xp, None)
-        self.assertEqual(xp.path, expected)
-
-
-    def test_search_complex(self):
-        """Complex search XPath"""
-        xp = filterous.get_search_xpath({
-            'tag': ['foo&bar', 'na"lle'],
-            'url': ['https://', 'example.org'],
-            'note': ['<test>', "'fisk'", 'æé€']
-            })
-        expected = ""
-        self.assertNotEqual(xp, None)
-        self.assertEqual(xp.path, expected)
-
-
-class TestAll(unittest.TestCase):
+class TestSearch(unittest.TestCase):
     """Framework for tag AND tests."""
     # pylint: disable-msg=R0904
 
     def setUp(self):
         """Get XML file contents."""
         # pylint: disable-msg=C0103
-        self.bookmarks = filterous.DeliciousBookmarks(
-            ET.fromstring(XML))
+        self.xml = StringIO(XML)
+        self.result = StringIO()
 
 
     def test_empty_tag(self):
-        """Empty tag; should have no posts left."""
-        self.bookmarks.search({'tag': [u'']})
+        """Empty tag; should get no results."""
+        filterous.search(
+            self.xml,
+            {'tag': [u'']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            _posts(self.bookmarks),
-            [])
+            self.result.getvalue(),
+            '')
 
 
     def test_separator_tag(self):
-        """Search for tag separator; should have no posts left."""
-        self.bookmarks.search({'tag': [filterous.TAG_SEPARATOR]})
+        """Search for tag separator; should get no results."""
+        filterous.search(
+            self.xml,
+            {'tag': [filterous.TAG_SEPARATOR]},
+            ['href'],
+            self.result)
         self.assertEqual(
-            _posts(self.bookmarks),
-            [])
+            self.result.getvalue(),
+            '')
 
 
     def test_simple_tag(self):
-        """Simple tag used in one bookmark; should have 1 post left."""
-        self.bookmarks.search({'tag': [u'tosee']})
+        """Simple tag used in one bookmark; should get 1 result."""
+        filterous.search(
+            self.xml,
+            {'tag': [u'tosee']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            len(_posts(self.bookmarks)),
+            len(self.result.getvalue().splitlines()),
             1)
 
 
     def test_unused_tag(self):
-        """Unused tag; should have no posts left."""
-        self.bookmarks.search({'tag': [u'klaxbar']})
+        """Unused tag; should get no results."""
+        filterous.search(
+            self.xml,
+            {'tag': [u'klaxbar']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            _posts(self.bookmarks),
-            [])
+            self.result.getvalue(),
+            '')
 
 
     def test_unicode_tag(self):
-        """Unicode tag used in one bookmark; should have 1 post left."""
-        self.bookmarks.search({'tag': [u'★★★★★']})
+        """Unicode tag used in one bookmark; should get 1 result."""
+        filterous.search(
+            self.xml,
+            {'tag': [u'★★★★★']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            len(_posts(self.bookmarks)),
+            len(self.result.getvalue().splitlines()),
             1)
 
 
     def test_substring_tag(self):
         """Unused tag which is a substring of a used tag;
-        should have no posts left."""
-        self.bookmarks.search({'tag': [u'★']})
+        should get no results."""
+        filterous.search(
+            self.xml,
+            {'tag': [u'★']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            _posts(self.bookmarks),
-            [])
+            self.result.getvalue(),
+            '')
+
 
     def test_empty_tag_not(self):
-        """Empty tag; should not change."""
-        self.bookmarks.search({'ntag': [u'']})
+        """Empty tag; should get N results."""
+        filterous.search(
+            self.xml,
+            {'ntag': [u'']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            ET.tostring(self.bookmarks.getroot(), 'utf-8'),
-            XML)
+            len(self.result.getvalue().splitlines()),
+            self.xml.getvalue().count('<post '))
 
 
     def test_separator_tag_not(self):
-        """Search for tag separator; should not change."""
-        self.bookmarks.search({'ntag': [filterous.TAG_SEPARATOR]})
+        """Search for tag separator; should get N results."""
+        filterous.search(
+            self.xml,
+            {'ntag': [filterous.TAG_SEPARATOR]},
+            ['href'],
+            self.result)
         self.assertEqual(
-            ET.tostring(self.bookmarks.getroot(), 'utf-8'),
-            XML)
+            len(self.result.getvalue().splitlines()),
+            self.xml.getvalue().count('<post '))
 
 
     def test_simple_tag_not(self):
-        """Simple tag used in one bookmark; should have N-1 posts left."""
-        self.bookmarks.search({'ntag': [u'tosee']})
+        """Simple tag used in one bookmark; should get N-1 results."""
+        filterous.search(
+            self.xml,
+            {'ntag': [u'tosee']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            len(ET.tostring(self.bookmarks.getroot(), 'utf-8').splitlines()),
-            len(XML.splitlines()) - 1)
+            len(self.result.getvalue().splitlines()),
+            self.xml.getvalue().count('<post ') - 1)
 
 
     def test_unused_tag_not(self):
-        """Unused tag; should not change."""
-        self.bookmarks.search({'ntag': [u'klaxbar']})
+        """Unused tag; should get N results."""
+        filterous.search(
+            self.xml,
+            {'ntag': [u'klaxbar']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            ET.tostring(self.bookmarks.getroot(), 'utf-8'),
-            XML)
+            len(self.result.getvalue().splitlines()),
+            self.xml.getvalue().count('<post '))
 
 
     def test_unicode_tag_not(self):
-        """Unicode tag used in one bookmark; should have N-1 posts left."""
-        self.bookmarks.search({'ntag': [u'★★★★★']})
+        """Unicode tag used in one bookmark; should get N-1 results."""
+        filterous.search(
+            self.xml,
+            {'ntag': [u'★★★★★']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            len(ET.tostring(self.bookmarks.getroot(), 'utf-8').splitlines()),
-            len(XML.splitlines()) - 1)
+            len(self.result.getvalue().splitlines()),
+            self.xml.getvalue().count('<post ') - 1)
 
 
     def test_substring_tag_not(self):
-        """Unused tag which is a substring of a used tag; should not change."""
-        self.bookmarks.search({'ntag': [u'★']})
+        """Unused substring of a used tag; should get N results."""
+        filterous.search(
+            self.xml,
+            {'ntag': [u'★']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            ET.tostring(self.bookmarks.getroot(), 'utf-8'),
-            XML)
+            len(self.result.getvalue().splitlines()),
+            self.xml.getvalue().count('<post '))
+
 
     def test_simple_url(self):
-        """Domain name match"""
-        self.bookmarks.search({'url': [u'example.org']})
+        """Domain name match; should get 1 result."""
+        filterous.search(
+            self.xml,
+            {'url': [u'example.org']},
+            ['href'],
+            self.result)
         self.assertEqual(
-            len(_posts(self.bookmarks)),
+            len(self.result.getvalue().splitlines()),
             1)
+
+
+    def test_empty_url(self):
+        """Domain name match; should get 1 result."""
+        filterous.search(
+            self.xml,
+            {'url': [u'example.org']},
+            ['href'],
+            self.result)
+        self.assertEqual(
+            len(self.result.getvalue().splitlines()),
+            1)
+
 
 def main():
     """Command line options checkpoint"""
