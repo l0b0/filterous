@@ -52,29 +52,24 @@ import sys
 
 try:
     from lxml import etree
-    print("running with lxml.etree")
 except ImportError:
     try:
         # Python 2.5
         import xml.etree.cElementTree as etree
-        print("running with cElementTree on Python 2.5+")
     except ImportError:
         try:
             # Python 2.5
             import xml.etree.ElementTree as etree
-            print("running with ElementTree on Python 2.5+")
         except ImportError:
             try:
                 # normal cElementTree install
                 import cElementTree as etree
-                print("running with cElementTree")
             except ImportError:
                 try:
                     # normal ElementTree install
                     import elementtree.ElementTree as etree
-                    print("running with ElementTree")
                 except ImportError:
-                    print("Failed to import ElementTree from any known place")
+                    sys.stdout.write('Failed to import ElementTree from any known place\n')
 
 TAG_SEPARATOR = u' '
 """Delicious separates tags with spaces"""
@@ -110,16 +105,19 @@ def get_format_xpath(attributes):
     @return: XPath
     """
 
-    strings = []
+    attribute_paths = []
+
     for attribute in attributes:
         if attribute not in PARAM_ATTRIBUTES.values():
             raise NameError('Unknown attribute: %s' % attribute)
-        strings.append('@%s' % attribute)
+        attribute_paths.append('@' + attribute)
 
     if len(attributes) == 1:
-        result = strings[0]
+        result = 'concat(string(' + attribute_paths[0] + "), '\n')"
     else:
-        result = 'concat(%s)' % ", '\n', ".join(strings)
+        result = 'concat(' + \
+                 ", '\n', ".join(attribute_paths) + \
+                 ", '\n\n')"
 
     return etree.XPath(result)
 
