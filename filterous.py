@@ -50,27 +50,35 @@ __license__ = 'GPLv3'
 import getopt
 import sys
 
+# Fallback ElementTree import
 try:
+    # pylint: disable-msg=F0401
     from lxml import etree
 except ImportError:
     try:
         # Python 2.5
+        # pylint: disable-msg=F0401
         import xml.etree.cElementTree as etree
     except ImportError:
         try:
             # Python 2.5
+            # pylint: disable-msg=F0401
             import xml.etree.ElementTree as etree
         except ImportError:
             try:
                 # normal cElementTree install
+                # pylint: disable-msg=F0401
                 import cElementTree as etree
             except ImportError:
                 try:
                     # normal ElementTree install
+                    # pylint: disable-msg=F0401
                     import elementtree.ElementTree as etree
                 except ImportError:
-                    sys.stdout.write('Failed to import ElementTree from any known place\n')
+                    raise ImportError(
+                        'Failed to import ElementTree from any known place.')
 
+# pylint: disable-msg=W0105
 TAG_SEPARATOR = u' '
 """Delicious separates tags with spaces"""
 
@@ -97,6 +105,19 @@ PARAM_ATTRIBUTES = {
     'nurl': 'href'}
 """Map command line options to XML attribute names"""
 
+ATTRIBUTES_READABLE = {
+    'tag': 'Tags',
+    'description': 'Title',
+    'extended': 'Notes',
+    'href': 'URL'}
+
+ATTRIBUTES_REQUIRED = ['description', 'href']
+
+ERRM_SUBMIT_BUG = u'Please submit a bug report at \
+<https://sourceforge.net/tracker/?func=add&group_id=303845&atid=1280761>, \
+including the output of this script.'
+"""Ask users for feedback."""
+
 def get_format_xpath(attributes):
     """
     Pretty printing XPath.
@@ -104,20 +125,23 @@ def get_format_xpath(attributes):
     @param attributes: List of attributes to print
     @return: XPath
     """
+    assert(attributes is not None)
+    assert(len(attributes) != 0)
 
-    attribute_paths = []
-
+    paths = []
     for attribute in attributes:
-        if attribute not in PARAM_ATTRIBUTES.values():
-            raise NameError('Unknown attribute: %s' % attribute)
-        attribute_paths.append('@' + attribute)
+        assert(attribute in PARAM_ATTRIBUTES.values())
+        paths.append(
+            "concat('%(x_title)s: ', @%(x_attribute)s, '\n')" % {
+                'x_title': ATTRIBUTES_READABLE[attribute],
+                'x_attribute': attribute})
 
     if len(attributes) == 1:
-        result = 'concat(string(' + attribute_paths[0] + "), '\n')"
+        result = paths[0]
     else:
-        result = 'concat(' + \
-                 ", '\n', ".join(attribute_paths) + \
-                 ", '\n\n')"
+        result = "concat(" + ", ".join(paths)
+        result += ", '\n'"
+        result += ")"
 
     return etree.XPath(result)
 
@@ -126,8 +150,7 @@ def get_search_xpath(terms):
     """
     XPath expression to search on each post.
 
-    @param terms: Dictionary of terms, each with values to be searched for
-    @param attributes: List of attributes to print
+    @param terms: Dictionary of terms, each with a list of values to search for
     @return: XPath
     """
     result = ''
@@ -141,6 +164,7 @@ def get_search_xpath(terms):
         xpaths = []
         if term in SS_STRING_MATCHES:
             for value in values:
+                # Simpler to add spaces at the ends than to split and search
                 xpaths.append(
                     "contains(\
 concat(' ', @%(x_attribute)s, ' '), \
@@ -169,11 +193,6 @@ concat(' ', '%(x_value)s', ' '))" % {
     return '/posts/post' + result
 
 
-def write_if_node(out, node):
-    if node is not None:
-        out.write(etree.tostring(node, encoding='utf-8'))
-
-
 def search(file_pointer, terms, show_attributes, out):
     """
     Get only the posts that match the terms.
@@ -188,8 +207,8 @@ def search(file_pointer, terms, show_attributes, out):
 
     context = etree.iterparse(file_pointer, tag='posts')
 
-    for event, elem in context:
-        matches = elem.xpath(search_xpath)
+    for event, element in context:
+        matches = element.xpath(search_xpath)
         if matches is None:
             print('No matches found.')
             return
@@ -197,7 +216,8 @@ def search(file_pointer, terms, show_attributes, out):
         for match in matches:
             out.write(''.join(format_xpath(match).encode('utf8')))
 
-class Usage(Exception):
+
+class UsageError(ValueError):
     """Raise in case of invalid parameters."""
     # pylint: disable-msg=W0231
     def __init__(self, msg):
@@ -229,10 +249,10 @@ def main(argv = None):
                 'tdn',
                 search_opts)[0]
         except getopt.GetoptError, err:
-            raise Usage(err.msg)
+            raise UsageError(err.msg)
 
         if opts == []:
-            raise Usage(__doc__)
+            raise UsageError(__doc__)
 
         for option, value in opts:
             if option in search_options:
@@ -244,9 +264,12 @@ def main(argv = None):
             elif option == '-n':
                 show_attributes.append('extended')
             else:
-                raise Usage('Unhandled option %s' % option)
+                raise UsageError(
+                    "Unhandled option '%(x_option)s'. %(x_user_action)s" % {
+                        'x_option': option,
+                        'x_user_action': ERRM_SUBMIT_BUG})
 
-    except Usage, err:
+    except UsageError, err:
         sys.stderr.write(err.msg + '\n')
         return 2
 
