@@ -214,15 +214,39 @@ class TestSearch(unittest.TestCase):
 
 
     def test_empty_url(self):
-        """Domain name match; should get 1 result."""
+        """Empty domain name; should get N results."""
         filterous.search(
             self.xml,
-            {'url': [u'example.org']},
+            {'url': [u'']},
             ['href'],
             self.result)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
-            1)
+            self.xml.getvalue().count('<post '))
+
+
+    def test_simple_url_not(self):
+        """Domain name match; should get N-1 results."""
+        filterous.search(
+            self.xml,
+            {'nurl': [u'example.org']},
+            ['href'],
+            self.result)
+        self.assertEqual(
+            len(self.result.getvalue().splitlines()),
+            self.xml.getvalue().count('<post ') - 1)
+
+
+    def test_empty_url_not(self):
+        """Empty domain name; should get no results."""
+        filterous.search(
+            self.xml,
+            {'nurl': [u'']},
+            ['href'],
+            self.result)
+        self.assertEqual(
+            self.result.getvalue(),
+            '')
 
 
 def main():
