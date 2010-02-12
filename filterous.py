@@ -49,113 +49,155 @@ __license__ = 'GPLv3'
 
 import getopt
 import sys
-import xml.etree.ElementTree as ET
+
+try:
+    from lxml import etree
+    print("running with lxml.etree")
+except ImportError:
+    try:
+        # Python 2.5
+        import xml.etree.cElementTree as etree
+        print("running with cElementTree on Python 2.5+")
+    except ImportError:
+        try:
+            # Python 2.5
+            import xml.etree.ElementTree as etree
+            print("running with ElementTree on Python 2.5+")
+        except ImportError:
+            try:
+                # normal cElementTree install
+                import cElementTree as etree
+                print("running with cElementTree")
+            except ImportError:
+                try:
+                    # normal ElementTree install
+                    import elementtree.ElementTree as etree
+                    print("running with ElementTree")
+                except ImportError:
+                    print("Failed to import ElementTree from any known place")
 
 TAG_SEPARATOR = u' '
+"""Delicious separates tags with spaces"""
 
-class DeliciousBookmarks(ET.ElementTree):
-    """Has a list of bookmarks with their metadata and display functions."""
+POSITIVE_MATCHES = set(['tag', 'desc', 'note', 'url'])
+"""Values which /must/ be in the posts"""
 
-    def pretty_print(
-        self,
-        show_tags = False,
-        show_descriptions = False,
-        show_notes = False):
-        """Print shell output, optionally with tags, descriptions and notes."""
-        lines = []
+NEGATIVE_MATCHES = set(['ntag', 'ndesc', 'nnote', 'nurl'])
+"""Values which must /not/ be in the posts"""
 
-        for post in self.getroot().getchildren():
-            lines.append(post.get('href'))
+SS_STRING_MATCHES = set(['tag', 'ntag'])
+"""Match full string in a space separated list"""
 
-            if show_tags:
-                lines.append(post.get('tag'))
+SUBSTRING_MATCHES = set(['desc', 'ndesc', 'note', 'nnote', 'url', 'nurl'])
+"""Match any substring"""
 
-            if show_descriptions:
-                lines.append(post.get('description'))
+PARAM_ATTRIBUTES = {
+    'tag': 'tag',
+    'ntag': 'tag',
+    'desc': 'description',
+    'ndesc': 'description',
+    'note': 'extended',
+    'nnote': 'extended',
+    'url': 'href',
+    'nurl': 'href'}
+"""Map command line options to XML attribute names"""
 
-            if show_notes:
-                lines.append(post.get('extended'))
+def get_format_xpath(attributes):
+    """
+    Pretty printing XPath.
 
-            if show_tags or show_descriptions or show_notes:
-                # Space the posts nicely
-                lines.append('')
+    @param attributes: List of attributes to print
+    @return: XPath
+    """
 
-        return '\n'.join(lines)
+    strings = []
+    for attribute in attributes:
+        if attribute not in PARAM_ATTRIBUTES.values():
+            raise NameError('Unknown attribute: %s' % attribute)
+        strings.append('@%s' % attribute)
 
+    if len(attributes) == 1:
+        result = strings[0]
+    else:
+        result = 'concat(%s)' % ", '\n', ".join(strings)
 
-    def search_tags_and(self, tags):
-        """
-        Check that all tags are present. Remove the bookmark if not.
-
-        @param tags: List of tags
-        """
-        root = self.getroot()
-        bookmarks = root.getchildren()
-        garbage = []
-        for tag in tags:
-            for bookmark in bookmarks:
-                if tag not in bookmark.attrib['tag'].split(TAG_SEPARATOR) and \
-                       bookmark not in garbage:
-                    garbage.append(bookmark)
-
-        for bookmark in garbage:
-            root.remove(bookmark)
+    return etree.XPath(result)
 
 
-    def search_tags_not(self, tags):
-        """
-        Check that no tags are present. Remove the bookmark if they are.
+def get_search_xpath(terms):
+    """
+    XPath expression to search on each post.
 
-        @param tags: List of tags
-        """
-        root = self.getroot()
-        bookmarks = root.getchildren()
-        garbage = []
-        for tag in tags:
-            for bookmark in bookmarks:
-                if tag in bookmark.attrib['tag'].split(TAG_SEPARATOR) and \
-                       bookmark not in garbage:
-                    garbage.append(bookmark)
+    @param terms: Dictionary of terms, each with values to be searched for
+    @param attributes: List of attributes to print
+    @return: XPath
+    """
+    result = ''
 
-        for bookmark in garbage:
-            root.remove(bookmark)
+    for term, values in terms.items():
+        if term not in PARAM_ATTRIBUTES:
+            raise NameError('Not a valid search term: %s' % term)
+
+        attribute = PARAM_ATTRIBUTES[term]
+
+        xpaths = []
+        if term in SS_STRING_MATCHES:
+            for value in values:
+                xpaths.append(
+                    "contains(\
+concat(' ', @%(x_attribute)s, ' '), \
+concat(' ', '%(x_value)s', ' '))" % {
+                        'x_attribute': attribute,
+                        'x_value': value})
+        elif term in SUBSTRING_MATCHES:
+            for value in values:
+                xpaths.append(
+                    "contains(@%(x_attribute)s, '%(x_value)s')" % {
+                        'x_attribute': attribute,
+                        'x_value': value})
+        else:
+            raise NameError('Method unknown for search term: %s' % term)
+
+        if xpaths != []:
+            if term in NEGATIVE_MATCHES:
+                xpaths = ['not(%s)' % xpath for xpath in xpaths]
+            elif term not in POSITIVE_MATCHES:
+                raise NameError('Unsupported search term: %s' % term)
+
+            xpaths = ['[%s]' % xpath for xpath in xpaths]
+
+        result += ''.join(xpaths)
+
+    return '/posts/post' + result
 
 
-    def search_url(self, urls):
-        """
-        URL substring match.
-
-        @param url: Substring of an URL
-        """
-        root = self.getroot()
-        bookmarks = root.getchildren()
-        garbage = []
-        for url in urls:
-            for bookmark in bookmarks:
-                if bookmark.attrib['href'].find(url) == -1 and \
-                       bookmark not in garbage:
-                    garbage.append(bookmark)
-
-        for bookmark in garbage:
-            root.remove(bookmark)
+def write_if_node(out, node):
+    if node is not None:
+        out.write(etree.tostring(node, encoding='utf-8'))
 
 
-    def search(
-        self,
-        search):
-        """
-        Remove posts that don't match the search terms.
+def search(file_pointer, terms, show_attributes, out):
+    """
+    Get only the posts that match the terms.
 
-        @param search: Dictionary of search terms.
-        """
+    @param file_pointer: Delicious bookmark export file pointer
+    @param terms: Dictionary of search terms
+    @param show_attributes: Which attributes to output
+    @param out: Output stream
+    """
+    search_xpath = get_search_xpath(terms)
+    format_xpath = get_format_xpath(show_attributes)
 
-        if 'tag' in search:
-            self.search_tags_and(search['tag'])
-        if 'ntag' in search:
-            self.search_tags_not(search['ntag'])
-        if 'url' in search:
-            self.search_url(search['url'])
+    context = etree.iterparse(file_pointer, tag='posts')
 
+    for event, elem in context:
+        matches = elem.xpath(search_xpath)
+        if matches is None:
+            print('No matches found.')
+            return
+
+        for match in matches:
+            out.write(''.join(format_xpath(match).encode('utf8')))
 
 class Usage(Exception):
     """Raise in case of invalid parameters."""
@@ -170,62 +212,47 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    # Defaults
-    show_tags = False
-    show_descriptions = False
-    show_notes = False
+    # Default attributes in output
+    show_attributes = ['href']
 
-    search_options = [
-        'tag',
-        'ntag',
-        'desc',
-        'ndesc',
-        'note',
-        'nnote',
-        'url',
-        'nurl',
-        'etag',
-        'edesc',
-        'enote',
-        'eurl']
+    search_option_names = PARAM_ATTRIBUTES.keys()
+    search_opts = [option + '=' for option in search_option_names]
+    search_options = ['--' + option for option in search_option_names]
 
     # Initialize search function parameters
     search_params = {}
-    for search_option in search_options:
+    for search_option in search_option_names:
         search_params[search_option] = []
 
     try:
         try:
-            opts, args = getopt.getopt(
+            opts = getopt.getopt(
                 argv[1:],
                 'tdn',
-                [search_option + '=' for search_option in search_options])
+                search_opts)[0]
         except getopt.GetoptError, err:
             raise Usage(err.msg)
 
-        if len(opts) != 0:
-            for option, value in opts:
-                if option in [
-                    '--' + search_option for search_option in search_options]:
-                    search_params[option[2:]].append(value)
-                elif option == '-t':
-                    show_tags = True
-                elif option == '-d':
-                    show_descriptions = True
-                elif option == '-n':
-                    show_notes = True
-                else:
-                    raise Usage('Unhandled option %s' % option)
+        if opts == []:
+            raise Usage(__doc__)
+
+        for option, value in opts:
+            if option in search_options:
+                search_params[option[2:]].append(value)
+            elif option == '-t':
+                show_attributes.append('tag')
+            elif option == '-d':
+                show_attributes.append('description')
+            elif option == '-n':
+                show_attributes.append('extended')
+            else:
+                raise Usage('Unhandled option %s' % option)
 
     except Usage, err:
         sys.stderr.write(err.msg + '\n')
         return 2
 
-    bookmarks = DeliciousBookmarks(ET.fromstring(sys.stdin.read()))
-    bookmarks.search(search_params)
-
-    print(bookmarks.pretty_print(show_tags, show_descriptions, show_notes))
-
+    search(sys.stdin, search_params, show_attributes, sys.stdout)
 
 if __name__ == '__main__':
     sys.exit(main())

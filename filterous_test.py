@@ -14,8 +14,32 @@ __url__ = 'http://filterous.sourceforge.net/'
 __copyright__ = 'Copyright (C) 2010 Victor Engmark'
 __license__ = 'GPLv3'
 
+try:
+    from lxml import etree
+    print("running with lxml.etree")
+except ImportError:
+    try:
+        # Python 2.5
+        import xml.etree.cElementTree as etree
+        print("running with cElementTree on Python 2.5+")
+    except ImportError:
+        try:
+            # Python 2.5
+            import xml.etree.ElementTree as etree
+            print("running with ElementTree on Python 2.5+")
+        except ImportError:
+            try:
+                # normal cElementTree install
+                import cElementTree as etree
+                print("running with cElementTree")
+            except ImportError:
+                try:
+                    # normal ElementTree install
+                    import elementtree.ElementTree as etree
+                    print("running with ElementTree")
+                except ImportError:
+                    print("Failed to import ElementTree from any known place")
 import unittest
-import xml.etree.ElementTree as ET
 
 import filterous
 
@@ -49,6 +73,39 @@ time="2006-12-01T15:00:52Z" \
 def _posts(bookmarks):
     """Element objects for each post"""
     return bookmarks.getroot().getchildren()
+
+class TestRegex(unittest.TestCase):
+    """Framework for testing regular expression generators."""
+
+    def test_format_simple(self):
+        """Simple formatting XPath"""
+        xp = filterous.get_format_xpath(['tag'])
+        expected = '@tag'
+        self.assertNotEqual(xp, None)
+        self.assertEqual(xp.path, expected)
+
+
+    def test_search_simple(self):
+        """Simple search XPath"""
+        xp = filterous.get_search_xpath({'tag': ['foobar']})
+        expected = "/posts/post[contains(\
+concat(' ', @tag, ' '), \
+concat(' ', 'foobar', ' '))]"
+        self.assertNotEqual(xp, None)
+        self.assertEqual(xp.path, expected)
+
+
+    def test_search_complex(self):
+        """Complex search XPath"""
+        xp = filterous.get_search_xpath({
+            'tag': ['foo&bar', 'na"lle'],
+            'url': ['https://', 'example.org'],
+            'note': ['<test>', "'fisk'", 'æé€']
+            })
+        expected = ""
+        self.assertNotEqual(xp, None)
+        self.assertEqual(xp.path, expected)
+
 
 class TestAll(unittest.TestCase):
     """Framework for tag AND tests."""
