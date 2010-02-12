@@ -31,11 +31,11 @@ https://api.del.icio.us/v1/posts/all
 
 Examples:
 
-./filterous.py --tag=video --tag=tosee --ntag=seen < all.xml
-    Returns links to unseen videos.
+./filterous.py -t --tag=video --tag=tosee --ntag=seen < all.xml
+    Show links to unseen videos with their tags.
 
 ./filterous.py --nurl=https:// < all.xml
-    Returns non-HTTPS links.
+    Show non-HTTPS links.
 
 ./filterous.py --ntag=for: --tag=★★★★★ < all.xml
     Returns great links that you have not shared with your contacts.
@@ -163,6 +163,11 @@ def _get_search_xpath(terms):
         attribute = PARAM_ATTRIBUTES[term]
 
         xpaths = []
+        for index in range(len(values)):
+            value = values[index]
+            if isinstance(value, str):
+                values[index] = value.decode("utf-8")
+
         if term in SS_STRING_MATCHES:
             for value in values:
                 # Simpler to add spaces at the ends than to split and search
@@ -171,13 +176,13 @@ def _get_search_xpath(terms):
 concat(' ', @%(x_attribute)s, ' '), \
 concat(' ', '%(x_value)s', ' '))" % {
                         'x_attribute': attribute,
-                        'x_value': value.decode("utf-8")})
+                        'x_value': value})
         elif term in SUBSTRING_MATCHES:
             for value in values:
                 xpaths.append(
                     u"contains(@%(x_attribute)s, '%(x_value)s')" % {
                         'x_attribute': attribute,
-                        'x_value': value.decode("utf-8")})
+                        'x_value': value})
         else:
             raise NameError('Method unknown for search term: %s' % term)
 
