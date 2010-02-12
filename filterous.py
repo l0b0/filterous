@@ -34,10 +34,10 @@ Examples:
 ./filterous.py --tag=video --tag=tosee --ntag=seen < all.xml
     Returns links to unseen videos.
 
-./filterous.py --nurl=^https < all.xml
+./filterous.py --nurl=https:// < all.xml
     Returns non-HTTPS links.
 
-./filterous.py --ntag=^for: --tag=★★★★★ < all.xml
+./filterous.py --ntag=for: --tag=★★★★★ < all.xml
     Returns great links that you have not shared with your contacts.
 """
 
@@ -167,29 +167,29 @@ def _get_search_xpath(terms):
             for value in values:
                 # Simpler to add spaces at the ends than to split and search
                 xpaths.append(
-                    "contains(\
+                    u"contains(\
 concat(' ', @%(x_attribute)s, ' '), \
 concat(' ', '%(x_value)s', ' '))" % {
                         'x_attribute': attribute,
-                        'x_value': value})
+                        'x_value': value.decode("utf-8")})
         elif term in SUBSTRING_MATCHES:
             for value in values:
                 xpaths.append(
-                    "contains(@%(x_attribute)s, '%(x_value)s')" % {
+                    u"contains(@%(x_attribute)s, '%(x_value)s')" % {
                         'x_attribute': attribute,
-                        'x_value': value})
+                        'x_value': value.decode("utf-8")})
         else:
             raise NameError('Method unknown for search term: %s' % term)
 
         if xpaths != []:
             if term in NEGATIVE_MATCHES:
-                xpaths = ['not(%s)' % xpath for xpath in xpaths]
+                xpaths = [u'not(%s)' % xpath for xpath in xpaths]
             elif term not in POSITIVE_MATCHES:
                 raise NameError('Unsupported search term: %s' % term)
 
-            xpaths = ['[%s]' % xpath for xpath in xpaths]
+            xpaths = [u'[%s]' % xpath for xpath in xpaths]
 
-        result += ''.join(xpaths)
+        result += u''.join(xpaths)
 
     return etree.XPath('/posts/post' + result)
 
