@@ -47,35 +47,8 @@ __copyright__ = 'Copyright (C) 2010 Victor Engmark'
 __license__ = 'GPLv3'
 
 import getopt
+from lxml import etree
 import sys
-
-# Fallback ElementTree import
-try:
-    # pylint: disable-msg=F0401
-    from lxml import etree
-except ImportError:
-    try:
-        # Python 2.5
-        # pylint: disable-msg=F0401
-        import xml.etree.cElementTree as etree
-    except ImportError:
-        try:
-            # Python 2.5
-            # pylint: disable-msg=F0401
-            import xml.etree.ElementTree as etree
-        except ImportError:
-            try:
-                # normal cElementTree install
-                # pylint: disable-msg=F0401
-                import cElementTree as etree
-            except ImportError:
-                try:
-                    # normal ElementTree install
-                    # pylint: disable-msg=F0401
-                    import elementtree.ElementTree as etree
-                except ImportError:
-                    raise ImportError(
-                        'Failed to import ElementTree from any known place.')
 
 # pylint: disable-msg=W0105
 TAG_SEPARATOR = u' '
