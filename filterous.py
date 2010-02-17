@@ -15,6 +15,7 @@ Options:
 --nnote    Negated note search string (@extended)
 --url      URL search string (@href)
 --nurl     Negated URL search string (@href)
+-T         Output tab separated list for easier parsing
 -t         Show tags
 -d         Show descriptions
 -n         Show notes
@@ -37,8 +38,9 @@ Examples:
 ./filterous.py --nurl=https:// < all.xml
     Show non-HTTPS links.
 
-./filterous.py --ntag=for: --tag=★★★★★ < all.xml
-    Returns great links that you have not shared with your contacts.
+./filterous.py -dntT --ntag=for: --tag=★★★★★ < all.xml
+    Returns great links that you have not shared with your contacts as a tab-
+    separated list with URL, description, notes and tags.
 """
 
 __author__ = 'Victor Engmark'
@@ -90,9 +92,9 @@ ERRM_SUBMIT_BUG = u'Please submit a bug report at \
 including the output of this script.'
 """Ask users for feedback."""
 
-def _get_format_xpath(attributes):
+def _get_format_xpath(attributes, human_readable):
     """
-    Pretty printing XPath.
+    Pretty printing XPath for each post element.
 
     @param attributes: List of attributes to print
     @return: XPath
@@ -100,22 +102,32 @@ def _get_format_xpath(attributes):
     assert(attributes is not None)
     assert(len(attributes) != 0)
 
-    paths = []
+    # Newline separated for readability or tab separated for parsing
+    if human_readable:
+        attribute_separator = '\n'
+        post_separator = '\n\n'
+    else:
+        attribute_separator = '\t'
+        post_separator = '\n'
+
+    show_prefix = human_readable and len(attributes) != 1
+
+    result = 'concat('
+
     for attribute in attributes:
         assert(attribute in PARAM_ATTRIBUTES.values())
-        path = "concat("
-        if len(attributes) != 1:
-            # Show line prefix only when outputting several attributes
-            path += "'%s: ', " % ATTRIBUTES_READABLE[attribute]
-        path += "@%s, '\n')" % attribute
-        paths.append(path)
 
-    if len(attributes) == 1:
-        result = paths[0]
-    else:
-        result = "concat(" + ", ".join(paths)
-        result += ", '\n'"
-        result += ")"
+        if show_prefix:
+            result += '"%s: ", ' % ATTRIBUTES_READABLE[attribute]
+
+        result += '@%s, ' % attribute
+
+        if attribute != attributes[-1]:
+            result += '"%s", ' % attribute_separator
+        else:
+            result += '"%s"' % post_separator
+
+    result += ')'
 
     return etree.XPath(result)
 
@@ -172,7 +184,7 @@ concat(' ', '%(x_value)s', ' '))" % {
     return etree.XPath('/posts/post' + result)
 
 
-def search(file_pointer, terms, show_attributes, out):
+def search(file_pointer, out, terms, show_attributes, human_readable = True):
     """
     Get only the posts that match the terms.
 
@@ -182,7 +194,7 @@ def search(file_pointer, terms, show_attributes, out):
     @param out: Output stream
     """
     search_xpath = _get_search_xpath(terms)
-    format_xpath = _get_format_xpath(show_attributes)
+    format_xpath = _get_format_xpath(show_attributes, human_readable)
 
     context = etree.iterparse(file_pointer, tag='posts')
 
@@ -209,8 +221,9 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    # Default attributes in output
+    # Defaults
     show_attributes = ['href']
+    human_readable = True
 
     search_option_names = PARAM_ATTRIBUTES.keys()
     search_opts = [option + '=' for option in search_option_names]
@@ -225,7 +238,7 @@ def main(argv = None):
         try:
             opts = getopt.getopt(
                 argv[1:],
-                'tdn',
+                'dntT',
                 search_opts)[0]
         except getopt.GetoptError, err:
             raise UsageError(err.msg)
@@ -242,6 +255,8 @@ def main(argv = None):
                 show_attributes.append('extended')
             elif option == '-t':
                 show_attributes.append('tag')
+            elif option == '-T':
+                human_readable = False
             else:
                 raise UsageError(
                     "Unhandled option '%(x_option)s'. %(x_user_action)s" % {
@@ -252,7 +267,12 @@ def main(argv = None):
         sys.stderr.write(err.msg + '\n')
         return 2
 
-    search(sys.stdin, search_params, show_attributes, sys.stdout)
+    search(
+        sys.stdin,
+        sys.stdout,
+        search_params,
+        show_attributes,
+        human_readable)
 
 if __name__ == '__main__':
     sys.exit(main())

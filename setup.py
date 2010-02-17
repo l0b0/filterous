@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+"""Setup configuration."""
 
 from distutils.core import setup
 
 setup(
     name = 'Filterous',
-    version = '0.5.2',
+    version = '0.6',
     description = 'Delicious Command Line Filter',
     author = 'Victor Engmark',
     author_email = 'victor.engmark@gmail.com',

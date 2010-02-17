@@ -60,9 +60,10 @@ class TestSearch(unittest.TestCase):
         """Empty tag; should get no results."""
         filterous.search(
             self.xml,
+            self.result,
             {'tag': [u'']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             self.result.getvalue(),
             '')
@@ -72,9 +73,10 @@ class TestSearch(unittest.TestCase):
         """Search for tag separator; should get no results."""
         filterous.search(
             self.xml,
+            self.result,
             {'tag': [filterous.TAG_SEPARATOR]},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             self.result.getvalue(),
             '')
@@ -84,9 +86,10 @@ class TestSearch(unittest.TestCase):
         """Simple tag used in one bookmark; should get 1 result."""
         filterous.search(
             self.xml,
+            self.result,
             {'tag': [u'tosee']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             1)
@@ -96,9 +99,10 @@ class TestSearch(unittest.TestCase):
         """Unused tag; should get no results."""
         filterous.search(
             self.xml,
+            self.result,
             {'tag': [u'klaxbar']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             self.result.getvalue(),
             '')
@@ -108,9 +112,10 @@ class TestSearch(unittest.TestCase):
         """Unicode tag used in one bookmark; should get 1 result."""
         filterous.search(
             self.xml,
+            self.result,
             {'tag': [u'★★★★★']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             1)
@@ -121,9 +126,10 @@ class TestSearch(unittest.TestCase):
         should get no results."""
         filterous.search(
             self.xml,
+            self.result,
             {'tag': [u'★']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             self.result.getvalue(),
             '')
@@ -133,9 +139,10 @@ class TestSearch(unittest.TestCase):
         """Empty tag; should get N results."""
         filterous.search(
             self.xml,
+            self.result,
             {'ntag': [u'']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             self.xml.getvalue().count('<post '))
@@ -145,9 +152,10 @@ class TestSearch(unittest.TestCase):
         """Search for tag separator; should get N results."""
         filterous.search(
             self.xml,
+            self.result,
             {'ntag': [filterous.TAG_SEPARATOR]},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             self.xml.getvalue().count('<post '))
@@ -157,9 +165,10 @@ class TestSearch(unittest.TestCase):
         """Simple tag used in one bookmark; should get N-1 results."""
         filterous.search(
             self.xml,
+            self.result,
             {'ntag': [u'tosee']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             self.xml.getvalue().count('<post ') - 1)
@@ -169,9 +178,10 @@ class TestSearch(unittest.TestCase):
         """Unused tag; should get N results."""
         filterous.search(
             self.xml,
+            self.result,
             {'ntag': [u'klaxbar']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             self.xml.getvalue().count('<post '))
@@ -181,9 +191,10 @@ class TestSearch(unittest.TestCase):
         """Unicode tag used in one bookmark; should get N-1 results."""
         filterous.search(
             self.xml,
+            self.result,
             {'ntag': [u'★★★★★']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             self.xml.getvalue().count('<post ') - 1)
@@ -193,9 +204,10 @@ class TestSearch(unittest.TestCase):
         """Unused substring of a used tag; should get N results."""
         filterous.search(
             self.xml,
+            self.result,
             {'ntag': [u'★']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             self.xml.getvalue().count('<post '))
@@ -205,9 +217,10 @@ class TestSearch(unittest.TestCase):
         """Domain name match; should get 1 result."""
         filterous.search(
             self.xml,
+            self.result,
             {'url': [u'example.org']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             1)
@@ -217,9 +230,10 @@ class TestSearch(unittest.TestCase):
         """Empty domain name; should get N results."""
         filterous.search(
             self.xml,
+            self.result,
             {'url': [u'']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             self.xml.getvalue().count('<post '))
@@ -229,9 +243,10 @@ class TestSearch(unittest.TestCase):
         """Domain name match; should get N-1 results."""
         filterous.search(
             self.xml,
+            self.result,
             {'nurl': [u'example.org']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             len(self.result.getvalue().splitlines()),
             self.xml.getvalue().count('<post ') - 1)
@@ -241,9 +256,10 @@ class TestSearch(unittest.TestCase):
         """Empty domain name; should get no results."""
         filterous.search(
             self.xml,
+            self.result,
             {'nurl': [u'']},
             ['href'],
-            self.result)
+            False)
         self.assertEqual(
             self.result.getvalue(),
             '')
