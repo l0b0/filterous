@@ -103,12 +103,13 @@ def _get_format_xpath(attributes, human_readable):
     assert(len(attributes) != 0)
 
     # Newline separated for readability or tab separated for parsing
+    post_separator = '\n'
     if human_readable:
         attribute_separator = '\n'
-        post_separator = '\n\n'
+        if len(attributes) != 1:
+            post_separator = '\n\n'
     else:
         attribute_separator = '\t'
-        post_separator = '\n'
 
     show_prefix = human_readable and len(attributes) != 1
 
