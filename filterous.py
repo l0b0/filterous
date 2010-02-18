@@ -244,9 +244,6 @@ def main(argv = None):
         except getopt.GetoptError, err:
             raise UsageError(err.msg)
 
-        if opts == []:
-            raise UsageError(__doc__)
-
         for option, value in opts:
             if option in search_options:
                 search_params[option[2:]].append(value)
