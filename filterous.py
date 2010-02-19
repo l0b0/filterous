@@ -33,14 +33,20 @@ https://api.del.icio.us/v1/posts/all
 Examples:
 
 ./filterous.py -t --tag=video --tag=tosee --ntag=seen < all.xml
-    Show links to unseen videos with their tags.
+    Unseen videos with tags.
 
-./filterous.py --nurl=https:// < all.xml
-    Show non-HTTPS links.
+./filterous.py --nurl=example.org < all.xml
+    Links to example.org.
 
-./filterous.py -dntT --ntag=for: --tag=★★★★★ < all.xml
-    Returns great links that you have not shared with your contacts as a tab-
-    separated list with URL, description, notes and tags.
+./filterous.py -dntT --tag=★★★★★ < all.xml
+    Returns great links as a tab-separated list with URL, description, notes and
+    tags.
+
+./filterous.py --url=index. < all.xml
+./filterous.py --url=# < all.xml
+./filterous.py --url=& < all.xml
+./filterous.py --url=//www. < all.xml
+    Bookmarks that could be shortened.
 """
 
 __author__ = 'Victor Engmark'
