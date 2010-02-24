@@ -47,6 +47,11 @@ Examples:
 ./filterous.py --url=& < all.xml
 ./filterous.py --url=//www. < all.xml
     Bookmarks that could be shortened.
+
+./filterous.py --tag=read --ntag=toread < all.xml
+./filterous.py --tag=seen --ntag=tosee < all.xml
+./filterous.py --tag=done --ntag=todo < all.xml
+    Strange tag combinations
 """
 
 __author__ = 'Victor Engmark'
@@ -254,11 +259,14 @@ def main(argv = None):
             if option in search_options:
                 search_params[option[2:]].append(value)
             elif option == '-d':
-                show_attributes.append('description')
+                if 'description' not in show_attributes:
+                    show_attributes.append('description')
             elif option == '-n':
-                show_attributes.append('extended')
+                if 'extended' not in show_attributes:
+                    show_attributes.append('extended')
             elif option == '-t':
-                show_attributes.append('tag')
+                if 'tag' not in show_attributes:
+                    show_attributes.append('tag')
             elif option == '-T':
                 human_readable = False
             else:
