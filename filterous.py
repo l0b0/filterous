@@ -19,6 +19,7 @@ Options:
 -t         Show tags
 -d         Show descriptions
 -n         Show notes
+-b         Show Delicious bookmarking link
 
 Description:
 Will search the tags of the XML file downloaded from
@@ -42,16 +43,17 @@ Examples:
     Returns great links as a tab-separated list with URL, description, notes and
     tags.
 
-./filterous.py --url=index. < all.xml
-./filterous.py --url=# < all.xml
-./filterous.py --url=& < all.xml
-./filterous.py --url=//www. < all.xml
-    Bookmarks that could be shortened.
+./filterous.py -b --url=index. < all.xml
+./filterous.py -b --url=# < all.xml
+./filterous.py -b --url=& < all.xml
+./filterous.py -b --url=//www. < all.xml
+    Bookmarks that could be shortened, with their bookmarking link for quick
+    correction.
 
 ./filterous.py --tag=read --ntag=toread < all.xml
 ./filterous.py --tag=seen --ntag=tosee < all.xml
 ./filterous.py --tag=done --ntag=todo < all.xml
-    Strange tag combinations
+    Strange tag combinations.
 """
 
 __author__ = 'Victor Engmark'
@@ -59,9 +61,11 @@ __email__ = 'victor.engmark@gmail.com'
 __copyright__ = 'Copyright (C) 2010 Victor Engmark'
 __license__ = 'GPLv3'
 
+from datetime import datetime
 import getopt
 from lxml import etree
 import sys
+from urllib import quote
 
 # pylint: disable-msg=W0105
 TAG_SEPARATOR = u' '
@@ -79,7 +83,7 @@ SS_STRING_MATCHES = set(['tag', 'ntag'])
 SUBSTRING_MATCHES = set(['desc', 'ndesc', 'note', 'nnote', 'url', 'nurl'])
 """Match any substring"""
 
-PARAM_ATTRIBUTES = {
+OPTION_ATTRIBUTES = {
     'tag': 'tag',
     'ntag': 'tag',
     'desc': 'description',
@@ -94,54 +98,87 @@ ATTRIBUTES_READABLE = {
     'tag': 'Tags',
     'description': 'Title',
     'extended': 'Notes',
-    'href': 'URL'}
+    'href': 'URL',
+    'bookmark': 'Bookmark'}
 
-ATTRIBUTES_REQUIRED = ['description', 'href']
+ATTRIBUTES_REQUIRED = ['href', 'description']
+"""These always have content in Delicious bookmarks"""
 
 ERRM_SUBMIT_BUG = u'Please submit a bug report at \
 <https://sourceforge.net/tracker/?func=add&group_id=303845&atid=1280761>, \
 including the output of this script.'
-"""Ask users for feedback."""
+"""Ask users for feedback"""
 
-def _get_format_xpath(attributes, human_readable):
-    """
-    Pretty printing XPath for each post element.
+class DeliciousBookmark():
+    """Container for Delicious bookmarks"""
+    def __init__(self, element):
+        """
+        Initialize element
 
-    @param attributes: List of attributes to print
-    @return: XPath
-    """
-    assert(attributes is not None)
-    assert(len(attributes) != 0)
+        @param element: XML element
+        """
+        self.element = element
 
-    # Newline separated for readability or tab separated for parsing
-    post_separator = '\n'
-    if human_readable:
-        attribute_separator = '\n'
-        if len(attributes) != 1:
-            post_separator = '\n\n'
-    else:
-        attribute_separator = '\t'
 
-    show_prefix = human_readable and len(attributes) != 1
+    def _format_value(self, include, value, human_readable):
+        """
+        Get printable value from attribute value
 
-    result = 'concat('
-
-    for attribute in attributes:
-        assert(attribute in PARAM_ATTRIBUTES.values())
-
-        if show_prefix:
-            result += '"%s: ", ' % ATTRIBUTES_READABLE[attribute]
-
-        result += '@%s, ' % attribute
-
-        if attribute != attributes[-1]:
-            result += '"%s", ' % attribute_separator
+        @param include: Name of the value
+        @param value: String to format
+        @param human_readable: Print human readable (otherwise parseable)?
+        @return: Formatted string
+        """
+        if include == 'time' and human_readable:
+            return str(datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ'))
+        elif include == 'bookmark':
+            return 'http://delicious.com/save?url=%s' % quote(value)
         else:
-            result += '"%s"' % post_separator
+            return value
 
-    result += ')'
 
-    return etree.XPath(result)
+    def prettyprint(self, out, includes, human_readable):
+        """
+        Output bookmark
+
+        @param out: Output stream
+        @param includes: Which things to include
+        @param human_readable: Print human readable (otherwise parseable)?
+        """
+        assert(includes is not None)
+        assert(len(includes) != 0)
+
+        if human_readable and len(includes) != 1:
+            post_separator = '\n\n'
+            show_prefix = True
+        else:
+            post_separator = '\n'
+            show_prefix = False
+
+        if human_readable:
+            include_separator = '\n'
+        else:
+            include_separator = '\t'
+
+        for include in includes:
+            # Prefix
+            if show_prefix:
+                out.write(ATTRIBUTES_READABLE[include] + ': ')
+
+            # Fetch value
+            if include == 'bookmark':
+                value = self.element.get('href')
+            else:
+                value = self.element.get(include)
+
+            # Value
+            out.write(self._format_value(include, value, human_readable).encode('utf-8'))
+
+            # Postfix
+            if include != includes[-1]:
+                out.write(include_separator)
+            else:
+                out.write(post_separator)
 
 
 def _get_search_xpath(terms):
@@ -154,10 +191,10 @@ def _get_search_xpath(terms):
     result = ''
 
     for term, values in terms.items():
-        if term not in PARAM_ATTRIBUTES:
+        if term not in OPTION_ATTRIBUTES:
             raise NameError('Not a valid search term: %s' % term)
 
-        attribute = PARAM_ATTRIBUTES[term]
+        attribute = OPTION_ATTRIBUTES[term]
 
         xpaths = []
         for index in range(len(values)):
@@ -196,17 +233,16 @@ concat(' ', '%(x_value)s', ' '))" % {
     return etree.XPath('/posts/post' + result)
 
 
-def search(file_pointer, out, terms, show_attributes, human_readable = True):
+def search(file_pointer, out, terms, includes, human_readable = True):
     """
     Get only the posts that match the terms.
 
     @param file_pointer: Delicious bookmark export file pointer
     @param terms: Dictionary of search terms
-    @param show_attributes: Which attributes to output
+    @param includes: Which attributes to output
     @param out: Output stream
     """
     search_xpath = _get_search_xpath(terms)
-    format_xpath = _get_format_xpath(show_attributes, human_readable)
 
     context = etree.iterparse(file_pointer, tag='posts')
 
@@ -217,7 +253,8 @@ def search(file_pointer, out, terms, show_attributes, human_readable = True):
             return
 
         for match in matches:
-            out.write(''.join(format_xpath(match).encode('utf8')))
+            bookmark = DeliciousBookmark(match)
+            bookmark.prettyprint(out, includes, human_readable)
 
 
 class UsageError(ValueError):
@@ -228,16 +265,16 @@ class UsageError(ValueError):
 
 
 def main(argv = None):
-    """Argument handling."""
+    """Option and argument handling."""
 
     if argv is None:
         argv = sys.argv
 
     # Defaults
-    show_attributes = ['href']
+    includes = ['href']
     human_readable = True
 
-    search_option_names = PARAM_ATTRIBUTES.keys()
+    search_option_names = OPTION_ATTRIBUTES.keys()
     search_opts = [option + '=' for option in search_option_names]
     search_options = ['--' + option for option in search_option_names]
 
@@ -250,7 +287,7 @@ def main(argv = None):
         try:
             opts = getopt.getopt(
                 argv[1:],
-                'dntT',
+                'bdntT',
                 search_opts)[0]
         except getopt.GetoptError, err:
             raise UsageError(err.msg)
@@ -258,15 +295,18 @@ def main(argv = None):
         for option, value in opts:
             if option in search_options:
                 search_params[option[2:]].append(value)
+            elif option == '-b':
+                if 'bookmark' not in includes:
+                    includes.append('bookmark')
             elif option == '-d':
-                if 'description' not in show_attributes:
-                    show_attributes.append('description')
+                if 'description' not in includes:
+                    includes.append('description')
             elif option == '-n':
-                if 'extended' not in show_attributes:
-                    show_attributes.append('extended')
+                if 'extended' not in includes:
+                    includes.append('extended')
             elif option == '-t':
-                if 'tag' not in show_attributes:
-                    show_attributes.append('tag')
+                if 'tag' not in includes:
+                    includes.append('tag')
             elif option == '-T':
                 human_readable = False
             else:
@@ -283,7 +323,7 @@ def main(argv = None):
         sys.stdin,
         sys.stdout,
         search_params,
-        show_attributes,
+        includes,
         human_readable)
 
 if __name__ == '__main__':
