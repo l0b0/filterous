@@ -120,15 +120,21 @@ class DeliciousBookmark():
         self.element = element
 
 
-    def _format_value(self, include, value, human_readable):
+    def _format_value(self, include, human_readable):
         """
         Get printable value from attribute value
 
         @param include: Name of the value
-        @param value: String to format
         @param human_readable: Print human readable (otherwise parseable)?
         @return: Formatted string
         """
+        # Fetch
+        if include == 'bookmark':
+            value = self.element.get('href')
+        else:
+            value = self.element.get(include)
+
+        # Format
         if include == 'time' and human_readable:
             return str(datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ'))
         elif include == 'bookmark':
@@ -165,14 +171,10 @@ class DeliciousBookmark():
             if show_prefix:
                 out.write(ATTRIBUTES_READABLE[include] + ': ')
 
-            # Fetch value
-            if include == 'bookmark':
-                value = self.element.get('href')
-            else:
-                value = self.element.get(include)
-
             # Value
-            out.write(self._format_value(include, value, human_readable).encode('utf-8'))
+            text_value = self._format_value(include, human_readable)
+            if text_value is not None:
+                out.write(text_value.encode('utf-8'))
 
             # Postfix
             if include != includes[-1]:
@@ -271,6 +273,11 @@ def main(argv = None):
         argv = sys.argv
 
     # Defaults
+    output_options = {
+        'b': 'bookmark',
+        'd': 'description',
+        'n': 'extended',
+        't': 'tag'}
     includes = ['href']
     human_readable = True
 
@@ -287,7 +294,7 @@ def main(argv = None):
         try:
             opts = getopt.getopt(
                 argv[1:],
-                'bdntT',
+                ''.join(output_options) + 'T',
                 search_opts)[0]
         except getopt.GetoptError, err:
             raise UsageError(err.msg)
@@ -295,18 +302,9 @@ def main(argv = None):
         for option, value in opts:
             if option in search_options:
                 search_params[option[2:]].append(value)
-            elif option == '-b':
-                if 'bookmark' not in includes:
-                    includes.append('bookmark')
-            elif option == '-d':
-                if 'description' not in includes:
-                    includes.append('description')
-            elif option == '-n':
-                if 'extended' not in includes:
-                    includes.append('extended')
-            elif option == '-t':
-                if 'tag' not in includes:
-                    includes.append('tag')
+            elif option[1:] in output_options:
+                if output_options[option[1:]] not in includes:
+                    includes.append(output_options[option[1:]])
             elif option == '-T':
                 human_readable = False
             else:
