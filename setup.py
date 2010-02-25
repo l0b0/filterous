@@ -5,7 +5,7 @@ from distutils.core import setup
 
 setup(
     name = 'Filterous',
-    version = '0.6.2',
+    version = '0.7',
     description = 'Delicious Command Line Filter',
     author = 'Victor Engmark',
     author_email = 'victor.engmark@gmail.com',

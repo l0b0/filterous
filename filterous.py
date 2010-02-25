@@ -50,9 +50,9 @@ Examples:
     Bookmarks that could be shortened, with their bookmarking link for quick
     correction.
 
-./filterous.py --tag=read --ntag=toread < all.xml
-./filterous.py --tag=seen --ntag=tosee < all.xml
-./filterous.py --tag=done --ntag=todo < all.xml
+./filterous.py -b --tag=read --ntag=toread < all.xml
+./filterous.py -b --tag=seen --ntag=tosee < all.xml
+./filterous.py -b --tag=done --ntag=todo < all.xml
     Strange tag combinations.
 """
 
