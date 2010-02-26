@@ -15,6 +15,7 @@ Options:
 --nnote    Negated note search string (@extended)
 --url      URL search string (@href)
 --nurl     Negated URL search string (@href)
+--help     Show this information (use pydoc ./filterous.py for more)
 -T         Output tab separated list for easier parsing
 -t         Show tags
 -d         Show descriptions
@@ -54,6 +55,10 @@ Examples:
 ./filterous.py -b --tag=seen --ntag=tosee < all.xml
 ./filterous.py -b --tag=done --ntag=todo < all.xml
     Strange tag combinations.
+
+./filterous.py < all.xml | xargs -d\\\\n linkchecker -r0 --no-warnings \
+--no-status > diagnosis.txt
+    Check links for errors
 """
 
 __author__ = 'Victor Engmark'
@@ -273,17 +278,20 @@ def main(argv = None):
         argv = sys.argv
 
     # Defaults
-    output_options = {
+    output_opts = {
         'b': 'bookmark',
         'd': 'description',
         'n': 'extended',
         't': 'tag'}
+    output_options = ['-' + option for option in output_opts.keys()]
     includes = ['href']
     human_readable = True
 
     search_option_names = OPTION_ATTRIBUTES.keys()
     search_opts = [option + '=' for option in search_option_names]
+    opts = search_opts + ['help']
     search_options = ['--' + option for option in search_option_names]
+    options = search_options + ['--help']
 
     # Initialize search function parameters
     search_params = {}
@@ -294,19 +302,23 @@ def main(argv = None):
         try:
             opts = getopt.getopt(
                 argv[1:],
-                ''.join(output_options) + 'T',
-                search_opts)[0]
+                ''.join(output_opts) + 'T',
+                opts)[0]
         except getopt.GetoptError, err:
-            raise UsageError(err.msg)
+            sys.stdout.write(__doc__)
+            return 1
 
         for option, value in opts:
             if option in search_options:
                 search_params[option[2:]].append(value)
-            elif option[1:] in output_options:
-                if output_options[option[1:]] not in includes:
-                    includes.append(output_options[option[1:]])
+            elif option in output_options:
+                if output_opts[option[1:]] not in includes:
+                    includes.append(output_opts[option[1:]])
             elif option == '-T':
                 human_readable = False
+            elif option == '--help':
+                sys.stdout.write(__doc__)
+                return 0
             else:
                 raise UsageError(
                     "Unhandled option '%(x_option)s'. %(x_user_action)s" % {
