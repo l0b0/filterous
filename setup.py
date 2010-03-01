@@ -5,11 +5,11 @@ from setuptools import setup
 
 setup(
     name = 'Filterous',
-    version = '0.7',
+    version = '0.7.2',
     description = 'Delicious Command Line Filter',
     author = 'Victor Engmark',
     author_email = 'victor.engmark@gmail.com',
-    url = 'http://vcard-module.sourceforge.net/',
+    url = 'http://filterous.sourceforge.net/',
     py_modules = ['filterous'],
     install_requires = ['lxml'],
     test_suite = 'filterous_test',
