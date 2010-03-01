@@ -46,7 +46,7 @@ Examples:
 
 ./filterous.py -b --url=index. < all.xml
 ./filterous.py -b --url=# < all.xml
-./filterous.py -b --url=& < all.xml
+./filterous.py -b --url=\& < all.xml
 ./filterous.py -b --url=//www. < all.xml
     Bookmarks that could be shortened, with their bookmarking link for quick
     correction.

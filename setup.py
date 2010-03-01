@@ -14,11 +14,11 @@ setup(
     install_requires = ['lxml'],
     test_suite = 'filterous_test',
     classifiers=[
-        'License :: OSI Approved :: GNU General Public License (GPL)',
-        'Intended Audience :: End Users/Desktop',
         'Development Status :: 4 - Beta',
-        'Topic :: Text Processing :: Filters',
-        'Programming Language :: Python :: 2.6',
-        'Operating System :: OS Independent',
         'Environment :: Console',
-        'Natural Language :: English'])
+        'Intended Audience :: End Users/Desktop',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2.6',
+        'Topic :: Text Processing :: Filters',])
