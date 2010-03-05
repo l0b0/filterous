@@ -69,6 +69,7 @@ __license__ = 'GPLv3'
 from datetime import datetime
 import getopt
 from lxml import etree
+import signal
 import sys
 from urllib import quote
 
@@ -113,6 +114,9 @@ ERRM_SUBMIT_BUG = u'Please submit a bug report at \
 <https://sourceforge.net/tracker/?func=add&group_id=303845&atid=1280761>, \
 including the output of this script.'
 """Ask users for feedback"""
+
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+"""Avoid 'Broken pipe' message when canceling piped command."""
 
 class DeliciousBookmark():
     """Container for Delicious bookmarks"""

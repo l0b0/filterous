@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name = 'Filterous',
-    version = '0.7.2',
+    version = '0.7.3',
     description = 'Delicious Command Line Filter',
     author = 'Victor Engmark',
     author_email = 'victor.engmark@gmail.com',
