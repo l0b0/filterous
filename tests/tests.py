@@ -4,7 +4,7 @@
 
 Default syntax:
 
-./filterous_test.py
+./tests.py
     Run all unit tests
 """
 
@@ -16,7 +16,7 @@ __license__ = 'GPLv3'
 from cStringIO import StringIO
 import unittest
 
-import filterous
+from filterous import filterous
 
 XML = '''<posts tag="" total="3" update="1900-01-01T00:00:00Z" user="none">\n\
   <post \

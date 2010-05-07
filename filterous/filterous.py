@@ -4,7 +4,7 @@
 
 Default syntax:
 
-./filterous.py [options] < all.xml
+filterous [options]
 
 Options:
 --tag      Tag search string (@tag)
@@ -15,7 +15,7 @@ Options:
 --nnote    Negated note search string (@extended)
 --url      URL search string (@href)
 --nurl     Negated URL search string (@href)
---help     Show this information (use pydoc ./filterous.py for more)
+--help     Show this information (use pydoc for more)
 -T         Output tab separated list for easier parsing
 -t         Show tags
 -d         Show descriptions
@@ -34,29 +34,29 @@ https://api.del.icio.us/v1/posts/all
 
 Examples:
 
-./filterous.py -t --tag=video --tag=tosee --ntag=seen < all.xml
+filterous -t --tag=video --tag=tosee --ntag=seen < all.xml
     Unseen videos with tags.
 
-./filterous.py --nurl=example.org < all.xml
+filterous --nurl=example.org < all.xml
     Links to example.org.
 
-./filterous.py -dntT --tag=★★★★★ < all.xml
+filterous -dntT --tag=★★★★★ < all.xml
     Returns great links as a tab-separated list with URL, description, notes and
     tags.
 
-./filterous.py -b --url=index. < all.xml
-./filterous.py -b --url=# < all.xml
-./filterous.py -b --url=\& < all.xml
-./filterous.py -b --url=//www. < all.xml
+filterous -b --url=index. < all.xml
+filterous -b --url=# < all.xml
+filterous -b --url=\& < all.xml
+filterous -b --url=//www. < all.xml
     Bookmarks that could be shortened, with their bookmarking link for quick
     correction.
 
-./filterous.py -b --tag=read --ntag=toread < all.xml
-./filterous.py -b --tag=seen --ntag=tosee < all.xml
-./filterous.py -b --tag=done --ntag=todo < all.xml
+filterous -b --tag=read --ntag=toread < all.xml
+filterous -b --tag=seen --ntag=tosee < all.xml
+filterous -b --tag=done --ntag=todo < all.xml
     Strange tag combinations.
 
-./filterous.py < all.xml | xargs -d\\\\n linkchecker -r0 --no-warnings \
+filterous < all.xml | xargs -d\\\\n linkchecker -r0 --no-warnings \
 --no-status > diagnosis.txt
     Check links for errors
 """
