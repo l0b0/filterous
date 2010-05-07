@@ -1,5 +1,7 @@
 #!/bin/sh
 
 # Requires rpm package
-
-python setup.py test && python setup.py $1 bdist_egg bdist_rpm bdist_wininst sdist upload clean
+cd $(dirname $0) && \
+python setup.py test && \
+python setup.py $1 bdist_egg bdist_rpm bdist_wininst sdist upload clean && \
+rm -fr *.pyc build dist Filterous.egg-info temp
