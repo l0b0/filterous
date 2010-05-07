@@ -6,7 +6,7 @@ Prerequisites: libxml2-dev and libxslt-dev
 """
 
 from setuptools import find_packages, setup
-from filterous import __doc__ as module_doc
+from filterous.filterous import __doc__ as module_doc
 
 setup(
     name = 'Filterous',
