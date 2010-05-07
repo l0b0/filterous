@@ -6,19 +6,20 @@ Prerequisites: libxml2-dev and libxslt-dev
 """
 
 from setuptools import find_packages, setup
-from filterous import __doc__ as fdoc
+from filterous import __doc__ as module_doc
 
 setup(
     name = 'Filterous',
     version = '0.8',
     description = 'Delicious Command Line Filter',
+    long_description = module_doc,
     url = 'http://filterous.sourceforge.net/',
-    long_description = fdoc,
     keywords = 'Delicious filterous search bookmarks tags',
     packages = find_packages(exclude=['tests']),
     install_requires = ['lxml'],
-    entry_points = {'console_scripts': ['filterous = filterous.filterous:main']},
-    classifiers=[
+    entry_points = {
+        'console_scripts': ['filterous = filterous.filterous:main']},
+    classifiers = [
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: End Users/Desktop',

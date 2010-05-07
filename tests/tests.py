@@ -1,6 +1,7 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Filterous test suite <http://filterous.sourceforge.net/>
+"""
+Filterous test suite <http://filterous.sourceforge.net/>
 
 Default syntax:
 

@@ -296,7 +296,6 @@ def main(argv = None):
     search_opts = [option + '=' for option in search_option_names]
     opts = search_opts + ['help']
     search_options = ['--' + option for option in search_option_names]
-    options = search_options + ['--help']
 
     # Initialize search function parameters
     search_params = {}
