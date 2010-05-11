@@ -2,7 +2,7 @@
 """
 Setup configuration
 
-Prerequisites: libxml2-dev and libxslt-dev
+Prerequisites: libxslt1-dev
 """
 
 from setuptools import find_packages, setup
