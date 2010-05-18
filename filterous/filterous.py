@@ -140,6 +140,7 @@ class DeliciousBookmark():
         # Fetch
         if include == 'bookmark':
             value = self.element.get('href')
+            value_hash = self.element.get('hash')
         else:
             value = self.element.get(include)
 
@@ -147,8 +148,10 @@ class DeliciousBookmark():
         if include == 'time' and human_readable:
             return str(datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ'))
         elif include == 'bookmark':
-            return 'http://delicious.com/save?url=%s&noui=1&jump=doclose' \
-                   % quote(value)
+            return 'http://delicious.com/save' + \
+            '?url=%s' % quote(value) + \
+            '&hash=%s' % quote(value_hash) + \
+            '&edit=yes&noui=1&jump=doclose'
         else:
             return value
 
