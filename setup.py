@@ -10,7 +10,7 @@ from filterous.filterous import __doc__ as module_doc
 
 setup(
     name = 'Filterous',
-    version = '0.8',
+    version = '0.8.1',
     description = 'Delicious Command Line Filter',
     long_description = module_doc,
     url = 'http://filterous.sourceforge.net/',
