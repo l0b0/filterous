@@ -34,26 +34,26 @@ https://api.del.icio.us/v1/posts/all
 
 Examples:
 
-filterous -t --tag=video --tag=tosee --ntag=seen < all.xml
+filterous -t --tag video --tag tosee --ntag seen < all.xml
     Unseen videos with tags.
 
-filterous --nurl=example.org < all.xml
+filterous --nurl example.org < all.xml
     Links to example.org.
 
-filterous -dntT --tag=★★★★★ < all.xml
+filterous -dntT --tag ★★★★★ < all.xml
     Returns great links as a tab-separated list with URL, description, notes and
     tags.
 
-filterous -b --url=index. < all.xml
-filterous -b --url=# < all.xml
-filterous -b --url=\& < all.xml
-filterous -b --url=//www. < all.xml
+filterous -b --url index. < all.xml
+filterous -b --url # < all.xml
+filterous -b --url \& < all.xml
+filterous -b --url //www. < all.xml
     Bookmarks that could be shortened, with their bookmarking link for quick
     correction.
 
-filterous -b --tag=read --ntag=toread < all.xml
-filterous -b --tag=seen --ntag=tosee < all.xml
-filterous -b --tag=done --ntag=todo < all.xml
+filterous -b --tag read --ntag toread < all.xml
+filterous -b --tag seen --ntag tosee < all.xml
+filterous -b --tag done --ntag todo < all.xml
     Strange tag combinations.
 
 filterous < all.xml | xargs -d\\\\n linkchecker -r0 --no-warnings \

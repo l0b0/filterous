@@ -1,0 +1,14 @@
+# Autocomplete for filterous command
+_filterous()
+{
+    local cur prev opts base
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    # Basic options
+    opts="--tag --ntag --desc --ndesc --note --nnote --url --nurl --help -T -t -d -n -b"
+
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+}
+complete -o filenames -o default -F _filterous filterous
