@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.1"
+   width="512"
+   height="512">
+  <rect
+     style="fill:blue"
+     width="256"
+     height="128"
+     x="128"
+     y="0"/>
+  <rect
+     style="fill:black"
+     width="128"
+     height="384"
+     x="0"
+     y="128"/>
+  <rect
+     style="fill:lightgray"
+     width="256"
+     height="128"
+     x="128"
+     y="128"/>
+  <rect
+     style="fill:blue"
+     width="256"
+     height="128"
+     x="128"
+     y="256"/>
+  <rect
+     style="fill:lightgray"
+     width="256"
+     height="128"
+     x="128"
+     y="384"/>
+</svg>
