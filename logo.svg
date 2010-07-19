@@ -5,6 +5,10 @@
     width="512"
     height="512">
     <rect
+        style="fill:white"
+        width="512"
+        height="512"/>
+    <rect
         style="fill:blue"
         width="256"
         height="128"
