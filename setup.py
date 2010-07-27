@@ -32,4 +32,9 @@ setup(
     test_suite = 'tests.tests',
     author = 'Victor Engmark',
     author_email = 'victor.engmark@gmail.com',
+    maintainer = 'Victor Engmark',
+    maintainer_email = 'victor.engmark@gmail.com',
+    download_url = 'http://sourceforge.net/projects/filterous/files/',
+    platforms = ['POSIX', 'Windows'],
+    license = 'GPL v3 or newer',
     )
