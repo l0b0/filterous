@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!DOCTYPE project_export SYSTEM "http://sourceforge.net/export/sf_project_export_0.1.dtd">
+<project_export>
+
+<artifacts>
+
+<artifact>
+	<field name="artifact_id">2950618</field>
+	<field user_id="508519" name="submitted_by">engmark</field>
+	<field user_id="508519" name="assigned_to">engmark</field>
+	<field name="priority">1</field>
+	<field name="status">Open</field>
+	<field name="resolution">None</field>
+	<field name="summary">Print only attributes with text</field>
+	<field name="open_date">1265987072</field>
+	<field name="artifact_type">Bugs</field>
+	<field name="category">Output</field>
+	<field name="artifact_group_id">Verified</field>
+	<field name="details">If the script is run with &#34;-n&#34;, and there are no notes, the empty line is still printed. Instead, don't print that line.</field>
+</artifact>
+<artifact>
+	<field name="artifact_id">3003469</field>
+	<field user_id="508519" name="submitted_by">engmark</field>
+	<field user_id="508519" name="assigned_to">engmark</field>
+	<field name="priority">5</field>
+	<field name="status">Closed</field>
+	<field name="resolution">None</field>
+	<field name="summary">Delicious URL creates duplicate bookmark when changing URL</field>
+	<field name="open_date">1274202469</field>
+	<field name="artifact_type">Bugs</field>
+	<field name="category">Output</field>
+	<field name="artifact_group_id">Verified</field>
+	<field name="details">How to reproduce:
+1. Run filterous with -b
+2. Open on the &#34;Bookmark&#34; URL in a browser
+3. Change the bookmark URL
+4. Save
+
+Now you'll have two bookmarks, one with the old URL and one with the new.</field>
+	<field name="artifact_messages">
+<message>
+		<field name="adddate">1274202758</field>
+		<field name="user_name">engmark</field>
+		<field name="body">Fixed - Please update your installation by running `sudo easy_install -U filterous`</field>
+</message>
+</field>
+	<field name="artifact_history">
+<history>
+		<field name="field_name">status_id</field>
+		<field name="old_value">1</field>
+		<field name="entrydate">1274202758</field>
+		<field name="mod_by">engmark</field>
+</history>
+
+<history>
+		<field name="field_name">allow_comments</field>
+		<field name="old_value">1</field>
+		<field name="entrydate">1274202758</field>
+		<field name="mod_by">engmark</field>
+</history>
+
+<history>
+		<field name="field_name">close_date</field>
+		<field name="old_value">0</field>
+		<field name="entrydate">1274202758</field>
+		<field name="mod_by">engmark</field>
+</history>
+</field>
+</artifact>
+<artifact>
+	<field name="artifact_id">2958700</field>
+	<field user_id="508519" name="submitted_by">engmark</field>
+	<field user_id="508519" name="assigned_to">engmark</field>
+	<field name="priority">3</field>
+	<field name="status">Open</field>
+	<field name="resolution">None</field>
+	<field name="summary">Regular expression search</field>
+	<field name="open_date">1267104888</field>
+	<field name="artifact_type">Feature Requests</field>
+	<field name="category">Search options</field>
+	<field name="artifact_group_id">None</field>
+	<field name="details">Should support regular expression search, using standard Python syntax, e.g.:
+--etag=^to.* (todo, toread, toget, etc.)
+--eurl=(.....).*\\1 (at least five characters in a row are repeated)</field>
+</artifact>
+<artifact>
+	<field name="artifact_id">2958736</field>
+	<field user_id="508519" name="submitted_by">engmark</field>
+	<field user_id="508519" name="assigned_to">engmark</field>
+	<field name="priority">5</field>
+	<field name="status">Open</field>
+	<field name="resolution">None</field>
+	<field name="summary">Return result as object</field>
+	<field name="open_date">1267108879</field>
+	<field name="artifact_type">Feature Requests</field>
+	<field name="category">Output formats</field>
+	<field name="artifact_group_id">None</field>
+	<field name="details">It should be possible to get the result as an object, for easy parsing by other Python modules.</field>
+</artifact>
+<artifact>
+	<field name="artifact_id">2958016</field>
+	<field user_id="508519" name="submitted_by">engmark</field>
+	<field user_id="508519" name="assigned_to">engmark</field>
+	<field name="priority">5</field>
+	<field name="status">Closed</field>
+	<field name="resolution">None</field>
+	<field name="summary">Option to output link to bookmark save page</field>
+	<field name="open_date">1267024952</field>
+	<field name="artifact_type">Feature Requests</field>
+	<field name="category">Output formats</field>
+	<field name="artifact_group_id">None</field>
+	<field name="details">To facilitate corrections of bookmarks, it should be possible to get the link to the bookmark edit page in the output, e.g., &#60;http://delicious.com/save?url=http%3A%2F%2Fexample.org%2F&#38;hash=e44a072761012ff2baead3f9ddeb4fb5&#38;key=mazeNWfo8m6SN5vnOzvojCQi4Ow-&#38;edit=yes&#62;</field>
+	<field name="artifact_messages">
+<message>
+		<field name="adddate">1267102947</field>
+		<field name="user_name">engmark</field>
+		<field name="body">This is available in the latest version:
+ svn co https://filterous.svn.sourceforge.net/svnroot/filterous filterous</field>
+</message>
+</field>
+	<field name="artifact_history">
+<history>
+		<field name="field_name">status_id</field>
+		<field name="old_value">1</field>
+		<field name="entrydate">1267102947</field>
+		<field name="mod_by">engmark</field>
+</history>
+
+<history>
+		<field name="field_name">allow_comments</field>
+		<field name="old_value">1</field>
+		<field name="entrydate">1267102947</field>
+		<field name="mod_by">engmark</field>
+</history>
+
+<history>
+		<field name="field_name">close_date</field>
+		<field name="old_value">0</field>
+		<field name="entrydate">1267102947</field>
+		<field name="mod_by">engmark</field>
+</history>
+</field>
+</artifact>
+</artifacts>
+
+<tasks>
+
+</tasks>
+
+<documents>
+	<field name="groupname">Uncategorized Submissions</field>
+	<field name="docid"></field>
+	noresult: stateid
+	<field name="title"></field>
+	<field name="data"></field>
+	<field name="updatedate"></field>
+	<field name="createdate"></field>
+	noresult: created_by
+	noresult: doc_group
+	<field name="description"></field>
+	noresult: language_id
+
+</documents>
+
+<news>
+	<field name="id">288999</field>
+	<field group_id="303845" name="group_id">Delicious Command Line Filter</field>
+	<field user_id="508519" name="submitted_by">engmark</field>
+	<field name="is_approved">false</field>
+	<field name="date">1278487600</field>
+	<field group_forum_id="0" name="forum_id"></field>
+	<field name="summary">Bash autocomplete</field>
+	<field name="details">The source distribution now contains an autocomplete file. To install it:
+Download http://filterous.svn.sourceforge.net/viewvc/filterous/etc/bash_completion.d/filterous?revision=HEAD
+Save the file to either /etc/bash_completion.d/ or create a symlink there to it.</field>
+	<field name="id">282540</field>
+	<field group_id="303845" name="group_id">Delicious Command Line Filter</field>
+	<field user_id="508519" name="submitted_by">engmark</field>
+	<field name="is_approved">false</field>
+	<field name="date">1265995292</field>
+	<field group_forum_id="0" name="forum_id"></field>
+	<field name="summary">Easy installable</field>
+	<field name="details">Filterous is now on the Python Package Index:
+http://pypi.python.org/pypi?name=Filterous&#38;:action=display
+You can install or upgrade it using
+easy_install -U filterous</field>
+
+</news>
+
+</project_export>
+
+ 	  	 
