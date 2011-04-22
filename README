@@ -1,1 +1,6 @@
 filterous - Search/filter your Delicious bookmark backups
+
+Search tips:
+
+Duplicated bookmark descriptions (possible content duplicates):
+$ filterous -Td < bookmarks.xml | awk -F $'\t' 'x[$2]++ == 1 { print $2 }'
