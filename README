@@ -1,5 +1,9 @@
 filterous - Search/filter your Delicious bookmark backups
 
+Installation:
+
+sudo easy_install -U filterous
+
 Search tips:
 
 Duplicated bookmark descriptions (possible content duplicates):
