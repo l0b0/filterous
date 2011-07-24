@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """
 Setup configuration
-
-Prerequisites: libxslt1-dev
 """
 
 from setuptools import find_packages, setup
