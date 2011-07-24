@@ -63,8 +63,12 @@ filterous < all.xml | xargs -d\\\\n linkchecker -r0 --no-warnings \
 
 __author__ = 'Victor Engmark'
 __email__ = 'victor.engmark@gmail.com'
-__copyright__ = 'Copyright (C) 2010 Victor Engmark'
-__license__ = 'GPLv3'
+__copyright__ = 'Copyright (C) 2010-2011 Victor Engmark'
+__license__ = 'GPL v3 or newer'
+__credits__ = ['Victor Engmark']
+__maintainer__ = 'Victor Engmark'
+__url__ = 'https://github.com/l0b0/filterous'
+__version__ = '0.8.3'
 
 from datetime import datetime
 import getopt

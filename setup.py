@@ -3,20 +3,22 @@
 Setup configuration
 """
 
-from setuptools import find_packages, setup
-from filterous.filterous import __doc__ as module_doc
+from setuptools import setup
+from filterous import filterous as package
 
 setup(
-    name = 'Filterous',
-    version = '0.8.2',
+    name=package.__package__,
+    version=package.__version__,
     description = 'Delicious Command Line Filter',
-    long_description = module_doc,
-    url = 'http://filterous.sourceforge.net/',
+    long_description=package.__doc__,
+    url=package.__url__,
     keywords = 'Delicious filterous search bookmarks tags',
-    packages = find_packages(exclude=['tests']),
+    packages=[package.__package__],
     install_requires = ['lxml'],
-    entry_points = {
-        'console_scripts': ['filterous = filterous.filterous:main']},
+    entry_points={
+        'console_scripts': [
+            '%(package)s=%(package)s.%(package)s:main' % {
+                'package': package.__package__}]},
     classifiers = [
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -28,11 +30,11 @@ setup(
         'Topic :: Text Processing :: Filters',
     ],
     test_suite = 'tests.tests',
-    author = 'Victor Engmark',
-    author_email = 'victor.engmark@gmail.com',
-    maintainer = 'Victor Engmark',
-    maintainer_email = 'victor.engmark@gmail.com',
-    download_url = 'http://sourceforge.net/projects/filterous/files/',
+    author=package.__author__,
+    author_email=package.__email__,
+    maintainer=package.__maintainer__,
+    maintainer_email=package.__email__,
+    download_url='http://pypi.python.org/pypi/mian/',
     platforms = ['POSIX', 'Windows'],
-    license = 'GPL v3 or newer',
+    license=package.__license__,
     )
