@@ -22,7 +22,9 @@ define version
  PYTHONPATH=. $(PYTHON_CMD) 'from filterous.filterous import __version__; print __version__'
 endef
 
-RELEASE_TAG = v$(shell PYTHONPATH=. $(PYTHON_CMD) 'from filterous.filterous import __version__; print __version__')
+NAME = $(notdir $(CURDIR))
+
+RELEASE_TAG = v$(shell PYTHONPATH=. $(PYTHON_CMD) 'from $(NAME).$(NAME) import __version__; print __version__')
 
 .PHONY: all
 all: dist
